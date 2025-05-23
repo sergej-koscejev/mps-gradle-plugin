@@ -1,0 +1,27 @@
+[versions]
+# this is our own version we deploy
+baseVersion =  "1.29.2"
+
+#versions
+kotlinApi = "1.7"
+kotlin = "1.7.10"
+kotlinJVMtarget = "1.8"
+
+# plugins
+kotlinCompatibilityValidator = "0.13.2"
+
+# libraries
+semver = "1.1.2"
+junit = "4.13.2"
+
+git-based-versioning = "*"
+buildBackends = "2.4.0+"
+
+[plugins]
+kotlin-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "kotlinCompatibilityValidator" }
+
+[libraries]
+swiftzer-semver = {group = "net.swiftzer.semver", name="semver", version.ref="semver"}
+junit = {group = "junit", name="junit", version.ref="junit"}
+itemis-gradle-git-based-versioning = {group= "de.itemis.mps.gradle", name = "git-based-versioning", version.ref="git-based-versioning"}
+itemis-gradle-build-backends-launcher = {group = "de.itemis.mps.build-backends", name="launcher", version.ref="buildBackends"}
