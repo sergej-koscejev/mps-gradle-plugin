@@ -7,7 +7,7 @@ buildscript {
     }
 
     dependencies {
-        classpath(libs.itemis.gradle.git.based.versioning)
+        classpath("de.itemis.mps.gradle:git-based-versioning")
     }
 }
 
@@ -20,6 +20,8 @@ plugins {
     alias(libs.plugins.kotlin.compatibility.validator)
 }
 
+val baseVersion = "1.29.1"
+
 group = "de.itemis.mps"
 
 val currentBranch : String? = GitBasedVersioning.getGitBranch()
@@ -29,14 +31,14 @@ version = if (!project.hasProperty("useSnapshot") &&
 ) {
     val prefix = when (currentBranch) {
         null, "", "v1.x", "HEAD", "master", "main" -> ""
-        else -> "${libs.versions.baseVersion.get()}."
+        else -> "$currentBranch."
     }
 
     val suffix = ".${GitBasedVersioning.getGitCommitCount()}.${GitBasedVersioning.getGitShortCommitHash()}"
 
-    prefix + libs.versions.baseVersion.get() + suffix
+    prefix + currentBranch + suffix
 } else {
-    "${libs.versions.baseVersion.get()}-SNAPSHOT"
+    "$currentBranch-SNAPSHOT"
 }
 
 val mpsConfiguration = configurations.create("mps")
@@ -145,7 +147,7 @@ java {
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = libs.versions.kotlinJVMtarget.get()
+    kotlinOptions.jvmTarget = libs.versions.kotlinJvmTarget.get()
     kotlinOptions.apiVersion = libs.versions.kotlinApi.get()
     kotlinOptions.allWarningsAsErrors = true
 }
