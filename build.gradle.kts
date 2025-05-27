@@ -20,7 +20,7 @@ plugins {
     alias(libs.plugins.kotlin.compatibility.validator)
 }
 
-val baseVersion = "1.29.1"
+val baseVersion = "1.29.2"
 
 group = "de.itemis.mps"
 
@@ -31,14 +31,14 @@ version = if (!project.hasProperty("useSnapshot") &&
 ) {
     val prefix = when (currentBranch) {
         null, "", "v1.x", "HEAD", "master", "main" -> ""
-        else -> "$currentBranch."
+        else -> "$baseVersion."
     }
 
     val suffix = ".${GitBasedVersioning.getGitCommitCount()}.${GitBasedVersioning.getGitShortCommitHash()}"
 
-    prefix + currentBranch + suffix
+    prefix + baseVersion + suffix
 } else {
-    "$currentBranch-SNAPSHOT"
+    "$baseVersion-SNAPSHOT"
 }
 
 val mpsConfiguration = configurations.create("mps")
