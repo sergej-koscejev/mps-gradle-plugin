@@ -31,7 +31,7 @@ version = if (!project.hasProperty("useSnapshot") &&
 ) {
     val prefix = when (currentBranch) {
         null, "", "v1.x", "HEAD", "master", "main" -> ""
-        else -> "$baseVersion."
+        else -> "$currentBranch."
     }
 
     val suffix = ".${GitBasedVersioning.getGitCommitCount()}.${GitBasedVersioning.getGitShortCommitHash()}"
@@ -55,7 +55,7 @@ dependencyLocking {
 
 dependencies {
     api(libs.itemis.gradle.git.based.versioning)
-    implementation(kotlin("stdlib", version = libs.versions.kotlin.get()))
+    implementation(libs.kotlin.stdlib)
     implementation(libs.swiftzer.semver)
     implementation(libs.itemis.gradle.build.backends.launcher)
     testImplementation(libs.junit)

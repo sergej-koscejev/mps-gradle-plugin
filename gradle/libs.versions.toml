@@ -17,6 +17,7 @@ buildBackends = "2.4.0.+"
 kotlin-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "kotlinCompatibilityValidator" }
 
 [libraries]
+kotlin-stdlib = {group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlin"}
 swiftzer-semver = {group = "net.swiftzer.semver", name="semver", version.ref="semver"}
 junit = {group = "junit", name="junit", version.ref="junit"}
 itemis-gradle-git-based-versioning = {group= "de.itemis.mps.gradle", name = "git-based-versioning", version.ref="gitBasedVersioning"}
