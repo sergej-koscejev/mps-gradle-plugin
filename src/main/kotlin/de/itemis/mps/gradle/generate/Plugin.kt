@@ -68,7 +68,7 @@ open class GenerateMpsProjectPlugin : Plugin<Project> {
                 *
                 */
                 fake.configure {
-                    mpsDir = mpsLocation
+                    mpsDir.set(mpsLocation)
                     dependsOn(resolveMps)
                 }
 
