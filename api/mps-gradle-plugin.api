@@ -226,13 +226,11 @@ public abstract class de/itemis/mps/gradle/downloadJBR/DownloadJbrProjectPlugin 
 	protected abstract fun getExecOperations ()Lorg/gradle/process/ExecOperations;
 }
 
-public class de/itemis/mps/gradle/generate/FakeBuildNumberTask : org/gradle/api/DefaultTask {
-	public field mpsDir Ljava/io/File;
+public abstract class de/itemis/mps/gradle/generate/FakeBuildNumberTask : org/gradle/api/DefaultTask {
 	public fun <init> ()V
 	public final fun fakeBuildNumber ()V
-	public final fun getBuildTxt ()Ljava/io/File;
-	public final fun getMpsDir ()Ljava/io/File;
-	public final fun setMpsDir (Ljava/io/File;)V
+	public final fun getBuildTxt ()Lorg/gradle/api/provider/Provider;
+	public abstract fun getMpsDir ()Lorg/gradle/api/file/DirectoryProperty;
 }
 
 public class de/itemis/mps/gradle/generate/GenerateMpsProjectPlugin : org/gradle/api/Plugin {

@@ -4,23 +4,20 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFile
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 import java.io.PrintWriter
 import java.util.*
-import javax.inject.Inject
 
 
-open class FakeBuildNumberTask @Inject constructor(of: ObjectFactory): DefaultTask() {
+abstract class FakeBuildNumberTask : DefaultTask() {
 
     @get:InputDirectory
     @get:Optional
-    val mpsDir: DirectoryProperty = of.directoryProperty()
+    abstract val mpsDir: DirectoryProperty
 
     @TaskAction
     fun fakeBuildNumber() {
@@ -44,4 +41,3 @@ open class FakeBuildNumberTask @Inject constructor(of: ObjectFactory): DefaultTa
         return mpsDir.file("build.txt")
     }
 }
-
