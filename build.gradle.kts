@@ -21,10 +21,9 @@ plugins {
     alias(libs.plugins.kotlin.compatibility.validator)
 }
 
-val baseVersion = "1.30.1"
-
 group = "de.itemis.mps"
 
+val baseVersion = "3.0.0-dev"
 val currentBranch : String? = GitBasedVersioning.getGitBranch()
 
 version = if (!project.hasProperty("useSnapshot") &&
