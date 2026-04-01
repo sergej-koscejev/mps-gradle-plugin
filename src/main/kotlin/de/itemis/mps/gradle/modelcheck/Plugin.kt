@@ -1,98 +1,107 @@
 package de.itemis.mps.gradle.modelcheck
 
 import de.itemis.mps.gradle.*
+import de.itemis.mps.gradle.launcher.MpsBackendBuilder
+import de.itemis.mps.gradle.launcher.MpsBackendLauncher
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.Task
-import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.ListProperty
-import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.JavaExec
+import org.gradle.kotlin.dsl.newInstance
+import org.gradle.process.CommandLineArgumentProvider
 import java.io.File
 import javax.inject.Inject
 
-open class ModelCheckPluginExtensions @Inject constructor(of: ObjectFactory, project: Project) : BasePluginExtensions(of, project) {
-    val models: ListProperty<String> = of.listProperty(String::class.java).convention(emptyList())
-
-    val modules: ListProperty<String> = of.listProperty(String::class.java).convention(emptyList())
-
-    val warningAsError: Property<Boolean> = of.property(Boolean::class.java).convention(false)
-
-    val errorNoFail: Property<Boolean> = of.property(Boolean::class.java).convention(false)
-
-    val junitFile: RegularFileProperty = of.fileProperty()
-
-    val junitFormat: Property<String> = of.property(String::class.java)
-
-    val maxHeap: Property<String> = of.property(String::class.java)
+open class ModelCheckPluginExtensions(objectFactory: ObjectFactory) : BasePluginExtensions(objectFactory) {
+    var models: List<String> = emptyList()
+    var modules: List<String> = emptyList()
+    var excludeModels: List<String> = emptyList()
+    var excludeModules: List<String> = emptyList()
+    var warningAsError = false
+    var errorNoFail = false
+    var junitFile: File? = null
+    var junitFormat: String? = null
+    var parallel: Boolean = false
 }
 
 open class ModelcheckMpsProjectPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         project.run {
-            val extension = extensions.create("modelcheck", ModelCheckPluginExtensions::class.java)
+            val extensionName = "modelcheck"
+            val extension = extensions.create(extensionName, ModelCheckPluginExtensions::class.java)
+            val checkmodels = tasks.register("checkmodels", JavaExec::class.java)
+
             afterEvaluate {
-                val mpsLocation = extension.mpsLocation.convention{ File(project.buildDir, "mps") }.map { it.asFile }.get()
+                val mpsVersion = extension.getMPSVersion(extensionName)
 
-                val mpsVersion = extension.getMPSVersion()
-                // this dependency will never resolve against SNAPSHOT version, if there is a previously released version for $mpsVersion
-                // hence if testing SNAPSHOT version locally, replace '+' with '.[pluginVersion]-SNAPSHOT', e.g. '.2-SNAPSHOT'
-                // to make sure that your local SNAPSHOT version will be resolved here
-                val dep = project.dependencies.create("de.itemis.mps:modelcheck:$mpsVersion+")
-                val genConfig = configurations.detachedConfiguration(dep)
+                val genConfig = extension.backendConfig ?: createDetachedBackendConfig(project)
 
-                if (mpsVersion.substring(0..3).toInt() < 2020) {
+                if(mpsVersion.substring(0..3).toInt() < 2020) {
                     throw GradleException(MPS_SUPPORT_MSG)
                 }
 
-
-                val args = argsFromBaseExtension(extension)
-
-                args.addAll(extension.models.get().map { "--model=$it" }.asSequence())
-                args.addAll(extension.modules.get().map { "--module=$it" }.asSequence())
-
-                if (extension.warningAsError.get()) {
-                    args.add("--warning-as-error")
-                }
-
-                if (extension.errorNoFail.get()) {
-                    args.add("--error-no-fail")
-                }
-
-                if (extension.junitFile.isPresent) {
-                    args.add("--result-file=${extension.junitFile.get().getAsFile().absolutePath}")
-                }
-
-                if (extension.junitFormat.isPresent) {
-                    args.add("--result-format=${extension.junitFormat.get()}")
-                }
-
-
-                val resolveMps: Task = if (extension.mpsConfig.isPresent) {
-                    tasks.create("resolveMpsForModelcheck", Copy::class.java) {
-                        from({extension.mpsConfig.get().resolve().map { zipTree(it) }})
+                val mpsLocation = extension.mpsLocation ?: layout.buildDirectory.dir("mps").get().asFile
+                val resolveMps = if (extension.mpsConfig != null) {
+                    tasks.register("resolveMpsForModelcheck", Copy::class.java) {
+                        from({ extension.mpsConfig!!.resolve().map(::zipTree) })
                         into(mpsLocation)
                     }
+                } else if (extension.mpsLocation != null) {
+                    tasks.register("resolveMpsForModelcheck")
                 } else {
-                    tasks.create("resolveMpsForModelcheck")
+                    throw GradleException(ErrorMessages.mustSetConfigOrLocation(extensionName))
                 }
 
+                checkmodels.configure {
+                    val backendBuilder: MpsBackendBuilder = project.objects.newInstance(MpsBackendBuilder::class)
+                    backendBuilder.withMpsHome(mpsLocation).withMpsVersion(mpsVersion).configure(this)
 
-                tasks.create("checkmodels", JavaExec::class.java) {
                     dependsOn(resolveMps)
-                    args(args)
-                    if (extension.javaExec.isPresent)
-                        executable(extension.javaExec.get())
-                    else
+
+                    argumentProviders.add(argsFromBaseExtension(extension))
+                    argumentProviders.add(CommandLineArgumentProvider {
+                        val args = mutableListOf<String>()
+                        args.addAll(extension.models.map { "--model=$it" })
+                        args.addAll(extension.modules.map { "--module=$it" })
+                        args.addAll(extension.excludeModels.map { "--exclude-model=$it" })
+                        args.addAll(extension.excludeModules.map { "--exclude-module=$it" })
+
+                        if (extension.warningAsError) {
+                            args.add("--warning-as-error")
+                        }
+
+                        if (extension.errorNoFail) {
+                            args.add("--error-no-fail")
+                        }
+
+                        if (extension.junitFile != null) {
+                            args.add("--result-file=${extension.junitFile!!.absolutePath}")
+                        }
+
+                        if (extension.junitFormat != null) {
+                            args.add("--result-format=${extension.junitFormat}")
+                        }
+
+                        if (extension.parallel) {
+                            args.add("--parallel")
+                        }
+                        args
+                    })
+
+                    if (extension.javaExec != null) {
+                        javaLauncher.set(null)
+                        executable(extension.javaExec!!)
+                    } else {
                         validateDefaultJvm()
+                    }
 
                     group = "test"
                     description = "Check models in the project"
-                    if (extension.maxHeap.isPresent) {
-                        maxHeapSize = extension.maxHeap.get()
+                    if (extension.maxHeap != null) {
+                        maxHeapSize = extension.maxHeap!!
                     }
                     classpath(fileTree(File(mpsLocation, "/lib")).include("**/*.jar"))
                     // add only minimal number of plugins jars that are required by the modelcheck code
@@ -108,11 +117,18 @@ open class ModelcheckMpsProjectPlugin : Plugin<Project> {
                         )
                     )
                     classpath(genConfig)
-                    debug = extension.debug.get()
+                    debug = extension.debug
                     mainClass.set("de.itemis.mps.gradle.modelcheck.MainKt")
                 }
             }
 
         }
     }
+
+    private fun createDetachedBackendConfig(project: Project): Configuration {
+        val dep = project.dependencies.create("de.itemis.mps.build-backends:modelcheck:${MPS_BUILD_BACKENDS_VERSION}")
+        val genConfig = project.configurations.detachedConfiguration(dep)
+        return genConfig
+    }
+
 }

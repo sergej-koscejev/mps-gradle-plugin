@@ -1,55 +1,53 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import java.net.URI
+import de.itemis.mps.gradle.GitBasedVersioning
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 buildscript {
     configurations.classpath {
         resolutionStrategy.activateDependencyLocking()
     }
-}
 
-val kotlinApiVersion by extra { "1.5" }
-val kotlinVersion by extra { "$kotlinApiVersion.31" }
+    dependencies {
+        classpath("de.itemis.mps.gradle:git-based-versioning")
+    }
+}
 
 plugins {
     groovy
     `java-gradle-plugin`
     `kotlin-dsl`
     `maven-publish`
-    kotlin("jvm") version "1.5.31"
+    kotlin("jvm") version libs.versions.kotlin
+    alias(libs.plugins.kotlin.compatibility.validator)
 }
 
-//Gradle-Pluign-Version
-val versionMajor = 2
-val versionMinor = 0
+val baseVersion = "1.30.1"
 
 group = "de.itemis.mps"
 
-val kotlinArgParserVersion by extra { "2.0.7" }
-val mpsVersion by extra { "2020.3.4" }
-//this version needs to align with the version shiped with MPS found in the /lib folder otherwise, runtime problems will
-//surface because mismatching jars on the classpath.
-val fastXmlJacksonVersion by extra { "2.11.+" }
-
+val currentBranch : String? = GitBasedVersioning.getGitBranch()
 
 version = if (!project.hasProperty("useSnapshot") &&
     (project.hasProperty("forceCI") || project.hasProperty("teamcity"))
 ) {
-    de.itemis.mps.gradle.GitBasedVersioning.getVersion(versionMajor, versionMinor)
-} else {
-    "$versionMajor.$versionMinor-SNAPSHOT"
-}
+    val prefix = when (currentBranch) {
+        null, "", "v1.x", "HEAD", "master", "main" -> ""
+        else -> "$currentBranch."
+    }
 
-var currentBranch:String? = ""
-currentBranch = de.itemis.mps.gradle.GitBasedVersioning.getGitBranch()
+    val suffix = ".${GitBasedVersioning.getGitCommitCount()}.${GitBasedVersioning.getGitShortCommitHash()}"
+
+    prefix + baseVersion + suffix
+} else {
+    "$baseVersion-SNAPSHOT"
+}
 
 val mpsConfiguration = configurations.create("mps")
 
-
 repositories {
     mavenCentral()
-    maven {
-        url = URI("https://artifacts.itemis.cloud/repository/maven-mps")
-    }
+    // For mps-build-backends, during tests
+    maven(url = "https://artifacts.itemis.cloud/repository/maven-mps")
 }
 
 dependencyLocking {
@@ -57,12 +55,16 @@ dependencyLocking {
 }
 
 dependencies {
-    implementation(localGroovy())
-    implementation(kotlin("stdlib", version = kotlinVersion))
-    implementation("net.swiftzer.semver:semver:1.1.2")
-    testImplementation("junit:junit:4.13.2")
+    api(libs.itemis.gradle.git.based.versioning)
+    implementation(libs.kotlin.stdlib)
+    implementation(libs.swiftzer.semver)
+    implementation(libs.itemis.gradle.build.backends.launcher)
+    testImplementation(libs.junit)
 }
 
+tasks.test {
+    useJUnit()
+}
 
 gradlePlugin {
     plugins {
@@ -85,92 +87,78 @@ gradlePlugin {
     }
 }
 
-tasks {
-    wrapper {
-        gradleVersion = "7.4.0"
-        distributionType = Wrapper.DistributionType.ALL
-    }
-
-    register("setTeamCityBuildNumber") {
-        doLast {
-            println("##teamcity[buildNumber '$version']")
-        }
+tasks.register("setTeamCityBuildNumber") {
+    doLast {
+        println("##teamcity[buildNumber '$version']")
     }
 }
 
-allprojects {
-    apply<MavenPublishPlugin>()
-    publishing {
-        repositories {
-            if(currentBranch == "master" || currentBranch!!.startsWith("mps")) {
-                maven {
-                    name = "itemisCloud"
-                    url = uri("https://artifacts.itemis.cloud/repository/maven-mps-releases/")
-                    if (project.hasProperty("artifacts.itemis.cloud.user") && project.hasProperty("artifacts.itemis.cloud.pw")) {
-                        credentials {
-                            username = project.findProperty("artifacts.itemis.cloud.user") as String?
-                            password = project.findProperty("artifacts.itemis.cloud.pw") as String?
-                        }
-                    }
+publishing {
+    repositories {
+        maven {
+            name = "itemisCloud"
+            url = uri("https://artifacts.itemis.cloud/repository/maven-mps-releases/")
+            if (project.hasProperty("artifacts.itemis.cloud.user") && project.hasProperty("artifacts.itemis.cloud.pw")) {
+                credentials {
+                    username = project.findProperty("artifacts.itemis.cloud.user") as String?
+                    password = project.findProperty("artifacts.itemis.cloud.pw") as String?
                 }
-                maven {
-                    name = "GitHubPackages"
-                    url = uri("https://maven.pkg.github.com/mbeddr/mps-gradle-plugin")
-                    if(project.hasProperty("gpr.token")) {
-                        credentials {
-                            username = project.findProperty("gpr.user") as String?
-                            password = project.findProperty("gpr.token") as String?
-                        }
+            }
+        }
+        if (currentBranch == "master" || currentBranch == "v1.x") {
+            maven {
+                name = "GitHubPackages"
+                url = uri("https://maven.pkg.github.com/mbeddr/mps-gradle-plugin")
+                if(project.hasProperty("gpr.token")) {
+                    credentials {
+                        username = project.findProperty("gpr.user") as String?
+                        password = project.findProperty("gpr.token") as String?
                     }
                 }
             }
         }
     }
-}
 
-subprojects {
-    dependencyLocking {
-        lockAllConfigurations()
-    }
-}
-
-tasks.register("createClasspathManifest") {
-    val outputDir = file("$buildDir/$name")
-
-    inputs.files(sourceSets.main.get().runtimeClasspath)
-        .withPropertyName("runtimeClasspath")
-        .withNormalizer(ClasspathNormalizer::class)
-    outputs.dir(outputDir)
-        .withPropertyName("outputDir")
-
-    doLast {
-        outputDir.mkdirs()
-        file("$outputDir/plugin-classpath.txt").writeText(sourceSets.main.get().runtimeClasspath.joinToString("\n"))
-    }
-}
-
-dependencies {
-    testRuntimeOnly(files(tasks["createClasspathManifest"]))
-}
-
-tasks.withType<KotlinCompile> {
-    kotlinOptions.jvmTarget = "11"
-    kotlinOptions.apiVersion = kotlinVersion
-    kotlinOptions.allWarningsAsErrors = true
-}
-
-
-
-tasks.register("resolveAndLockAll") {
-    doFirst {
-        require(gradle.startParameter.isWriteDependencyLocks)
-    }
-    doLast {
-        configurations.filter { it.isCanBeResolved }.forEach { it.resolve() }
-        subprojects.forEach { project ->
-            project.configurations.filter { it.isCanBeResolved }.forEach { it.resolve() }
+    publications.withType<MavenPublication>().configureEach {
+        versionMapping {
+            allVariants {
+                fromResolutionResult()
+            }
+        }
+        pom {
+            url.set("https://github.com/mbeddr/mps-gradle-plugin")
+            licenses {
+                license {
+                    name.set("The Apache License, Version 2.0")
+                    url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
+                }
+            }
+            scm {
+                connection.set("scm:git:git://github.com/mbeddr/mps-gradle-plugin.git")
+                developerConnection.set("scm:git:ssh://github.com/mbeddr/mps-gradle-plugin.git")
+                url.set("https://github.com/mbeddr/mps-gradle-plugin")
+            }
         }
     }
 }
 
+java {
+    targetCompatibility = JavaVersion.VERSION_11
+    withSourcesJar()
+}
 
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.fromTarget(libs.versions.kotlinJvmTarget.get())
+        apiVersion = KotlinVersion.fromVersion(libs.versions.kotlinApi.get())
+        allWarningsAsErrors = true
+    }
+}
+
+apiValidation {
+    ignoredClasses.add("de.itemis.mps.gradle.Common_gradle")
+}
+
+tasks.test {
+    maxParallelForks = (Runtime.getRuntime().availableProcessors() * 2 / 3).coerceAtLeast(1)
+}

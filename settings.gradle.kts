@@ -1,4 +1,11 @@
+pluginManagement {
+    includeBuild("git-based-versioning")
+}
+
+plugins {
+    id("org.gradle.toolchains.foojay-resolver-convention") version ("0.8.0")
+}
+
 rootProject.name = "mps-gradle-plugin"
-include("execute-generators")
-include("project-loader")
-include("modelcheck")
+
+includeBuild("git-based-versioning")

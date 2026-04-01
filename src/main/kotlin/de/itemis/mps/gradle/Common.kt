@@ -1,103 +1,114 @@
 package de.itemis.mps.gradle
 
-import de.itemis.mps.gradle.generate.GeneratePluginExtensions
 import org.apache.log4j.Logger
 import org.gradle.api.GradleException
 import org.gradle.api.JavaVersion
-import org.gradle.api.Project
-import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
-import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Copy
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.TaskContainer
-import java.util.Collections.emptyList
-
+import org.gradle.kotlin.dsl.property
+import org.gradle.process.CommandLineArgumentProvider
 import java.io.File
 import javax.inject.Inject
 
 private val logger = Logger.getLogger("de.itemis.mps.gradle.common")
 
-const val MPS_SUPPORT_MSG =
-    "Version 1.5 doesn't only support MPS 2020.1+, please use versions 1.4 or below with older versions of MPS."
+const val MPS_SUPPORT_MSG = ErrorMessages.MPS_VERSION_NOT_SUPPORTED
+
+const val MPS_BUILD_BACKENDS_VERSION = "[1.15,2.0)" // 1.15 required for --plugin-root support.
 
 data class Plugin(
-    val id: String,
-    val path: String
+        var id: String,
+        var path: String
 )
 
 data class Macro(
-    val name: String,
-    val value: String
+        var name: String,
+        var value: String
 )
 
-open class BasePluginExtensions @Inject constructor(of: ObjectFactory, project: Project) {
+enum class EnvironmentKind { MPS, IDEA }
 
-    val mpsConfig: Property<Configuration> = of.property(Configuration::class.java)
+open class BasePluginExtensions @Inject constructor(objectFactory: ObjectFactory) {
+    var mpsConfig: Configuration? = null
+    var mpsLocation: File? = null
+    var mpsVersion: String? = null
 
-    val mpsLocation: RegularFileProperty = of.fileProperty().convention { File(project.buildDir, "mps") }
-
-    val mpsVersion: Property<String> = of.property(String::class.java)
-
-    val plugins: ListProperty<Plugin> = of.listProperty(Plugin::class.java).convention(emptyList())
-
-    val pluginLocation: RegularFileProperty = of.fileProperty()
-
-    val macros: ListProperty<Macro> = of.listProperty(Macro::class.java).convention(emptyList())
-
-    val projectLocation: RegularFileProperty = of.fileProperty()
-
-    val debug: Property<Boolean> = of.property(Boolean::class.java).convention(false)
-
-    val javaExec: RegularFileProperty = of.fileProperty()
-}
-
-fun validateDefaultJvm() {
-    if (JavaVersion.current() != JavaVersion.VERSION_11) logger.error("MPS requires Java 11 but current JVM uses ${JavaVersion.current()}, starting MPS will most probably fail!")
-}
-
-fun argsFromBaseExtension(extensions: BasePluginExtensions): MutableList<String> {
-    val pluginLocation =
-        extensions.pluginLocation.map { sequenceOf("--plugin-location=${it.asFile.absolutePath}") }.getOrElse(
-            emptySequence()
-        )
-
-    val projectLocation = extensions.projectLocation.getOrElse { throw GradleException("No project path set") }.asFile
-    val prj = sequenceOf("--project=${projectLocation.absolutePath}")
-
-    return sequenceOf(
-        pluginLocation,
-        extensions.plugins.get().map { "--plugin=${it.id}::${it.path}" }.asSequence(),
-        extensions.macros.get().map { "--macro=${it.name}::${it.value}" }.asSequence(),
-        prj
-    ).flatten().toMutableList()
-}
-
-fun BasePluginExtensions.getMPSVersion(): String {
-    /*
-    If the user supplies a MPS config we use this one to resolve MPS and get the version. For other scenarios the user
-    can supply mpsLocation and mpsVersion then we do not resolve anything and the users build script is responsible for
-    resolving a compatible MPS into th mpsLocation before the
+    /**
+     * The plugins to load. Backed by [pluginsProperty] which should be used instead of this property.
      */
-    if (mpsConfig.isPresent) {
-        return mpsConfig
-            .get()
-            .resolvedConfiguration
-            .firstLevelModuleDependencies.find { it.moduleGroup == "com.jetbrains" && it.moduleName == "mps" }
-            ?.moduleVersion ?: throw GradleException("MPS configuration doesn't contain MPS")
-    }
+    @Deprecated("Use pluginsProperty")
+    var plugins: List<Plugin>
+        get() = pluginsProperty.get()
+        set(value) { pluginsProperty.value(value) }
 
-    if (mpsVersion.isPresent) {
-        if (!mpsLocation.isPresent) {
-            throw GradleException("Setting an MPS version but no MPS location is not supported!")
+    /**
+     * The plugins to load.
+     */
+    val pluginsProperty: ListProperty<Plugin> = objectFactory.listProperty(Plugin::class.java)
+
+    var pluginLocation: File? = null
+    var macros: List<Macro> = emptyList()
+    var projectLocation: File? = null
+    var debug = false
+    var javaExec: File? = null
+    var backendConfig: Configuration? = null
+
+    /**
+     * The environment to set up, IDEA or MPS. Default is IDEA for backwards compatibility reasons.
+     */
+    val environmentKind = objectFactory.property(EnvironmentKind::class).convention(EnvironmentKind.IDEA)
+
+    /**
+     * Maximum heap size, passed as the argument to the `-Xmx` JVM option. Example: `4G`, `512m`.
+     */
+    var maxHeap: String? = null
+}
+
+fun validateDefaultJvm(){
+    if (JavaVersion.current() < JavaVersion.VERSION_11) logger.error("MPS requires at least Java 11 but current JVM uses ${JavaVersion.current()}, starting MPS will most probably fail!")
+}
+
+fun argsFromBaseExtension(extensions: BasePluginExtensions): CommandLineArgumentProvider =
+    CommandLineArgumentProvider {
+        val result = mutableListOf<String>()
+
+        if (extensions.pluginLocation != null) {
+            result.add("--plugin-location=${extensions.pluginLocation!!.absolutePath}")
         }
-        return mpsVersion.get()
+
+        val projectLocation = extensions.projectLocation ?: throw GradleException("No project path set")
+        result.add("--project=${projectLocation.absolutePath}")
+
+        extensions.pluginsProperty.get().mapTo(result) { "--plugin=${it.id}::${it.path}" }
+        extensions.macros.mapTo(result) { "--macro=${it.name}::${it.value}" }
+
+        // --environment is supported by backend 1.2 and above
+        result.add("--environment=${extensions.environmentKind.get().name}")
+
+        result
     }
 
-    throw GradleException("Either mpsConfig or mpsVersion needs to specified!")
+@Deprecated("Use getMPSVersion(extensionName)", replaceWith = ReplaceWith("getMPSVersion(this.javaClass.name)"))
+fun BasePluginExtensions.getMPSVersion(): String = getMPSVersion(this.javaClass.name)
 
+/**
+ * [extensionName]: extension name, for diagnostics.
+ */
+fun BasePluginExtensions.getMPSVersion(extensionName: String): String {
+    // If the user supplies explicit mpsVersion, we use it.
+    if (mpsVersion != null) return mpsVersion!!
+
+    val mpsConfig = mpsConfig
+    if (mpsConfig != null) {
+        // If the user supplies a configuration, we use it to detect MPS version.
+        return mpsConfig.resolvedConfiguration.firstLevelModuleDependencies
+            .find { it.moduleGroup == "com.jetbrains" && it.moduleName == "mps" }
+            ?.moduleVersion
+            ?: throw GradleException(ErrorMessages.couldNotDetermineMpsVersionFromConfiguration(mpsConfig)
+        )
+    }
+
+    //  Otherwise, the version has to be provided explicitly.
+    throw GradleException(ErrorMessages.mustSetVersionWhenNoMpsConfiguration(extensionName))
 }

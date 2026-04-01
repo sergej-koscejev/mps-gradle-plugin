@@ -1,103 +1,137 @@
 package de.itemis.mps.gradle.downloadJBR
 
+import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.tasks.Copy
-import org.apache.tools.ant.taskdefs.condition.Os
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.Optional
+import org.gradle.process.ExecOperations
 import java.io.File
 import javax.inject.Inject
 
-open class DownloadJbrConfiguration @Inject constructor(of: ObjectFactory) {
+open class DownloadJbrConfiguration @Inject constructor(objects: ObjectFactory) {
+    lateinit var jbrVersion: String
+    var distributionType : String? = null
+    internal val downloadDirProperty: DirectoryProperty = objects.directoryProperty()
 
-    val jbrVersion: Property<String>  = of.property(String::class.java)
-
-    var distributionType : Property<String>  = of.property(String::class.java)
-
-    val downloadDir: RegularFileProperty = of.fileProperty()
+    var downloadDir: File?
+        get() = downloadDirProperty.get().asFile
+        set(value) {
+            downloadDirProperty.set(value)
+        }
 }
 
-open class DownloadJbrProjectPlugin : Plugin<Project> {
-    override fun apply(target: Project) {
-        target.run {
+abstract class DownloadJbrProjectPlugin : Plugin<Project> {
+
+    @get:Inject
+    protected abstract val execOperations: ExecOperations
+
+    override fun apply(project: Project) {
+        project.run {
 
             val extension = extensions.create("downloadJbr", DownloadJbrConfiguration::class.java)
+            extension.downloadDirProperty.convention(layout.buildDirectory.dir("jbrDownload"))
 
-            afterEvaluate {
-                val version = extension.jbrVersion.get()
-                val downloadDir = extension.downloadDir.convention{File(buildDir, "jbrDownload")}.map { it.asFile }.get()
+            val configuration = configurations.detachedConfiguration()
+            configuration.dependencies.addLater(provider { project.dependencies.create(dependencyString(extension)) })
 
-                // from version 10 on the jbr distribution type is replaced with jbr_jcef
-                // jbr_jcef is the distribution used to start a normal desktop ide and should include everything
-                // required for running tests. While a little bit larger than jbr_nomod it should cause the least
-                // surprises when using it as a default.
-                // see https://github.com/mbeddr/build.publish.jdk/commit/10bbf7d177336179ca189fc8bb4c1262029c69da
-                val distributionTypeVal = extension.distributionType.getOrElse(
-                    // default distribution type
-                    if (Regex("""11_0_[0-9][^0-9]""").find(version) != null) {
-                        "jbr"
+            val extractJbr = tasks.register("extractJbr") {
+                inputs.files(configuration).skipWhenEmpty()
+                outputs.dir(extension.downloadDirProperty)
+
+                doLast {
+                    if (Os.isFamily(Os.FAMILY_UNIX)) {
+                        // Use Unix utilities to properly deal with symlinks
+                        delete(extension.downloadDirProperty)
+                        val downloadDir = mkdir(extension.downloadDirProperty)
+
+                        execOperations.exec {
+                            commandLine("tar", "-xzf", configuration.singleFile.absolutePath)
+                            workingDir = downloadDir
+                        }
+
+                        if (downloadDir.listFiles { _, name -> name.startsWith("jbr_") || name.startsWith("jbr-") }!!.any()) {
+                            execOperations.exec {
+                                commandLine("sh", "-c", "mv jbr* jbr")
+                                workingDir = downloadDir
+                            }
+                        }
+
+                        execOperations.exec {
+                            commandLine("chmod", "-R", "u+w", ".")
+                            workingDir = downloadDir
+                        }
                     } else {
-                        "jbr_jcef"
+                        // On Windows we don't worry about symlinks nor file modes.
+                        sync {
+                            from({ tarTree(configuration.singleFile) })
+                            into(extension.downloadDirProperty)
+                            includeEmptyDirs = false
+                            eachFile {
+                                permissions { user { write = true } }
+                            }
+                            filesMatching("jbr_*/**") {
+                                path = path.replace("jbr_(.*?)/(.*)".toRegex(), "jbr/$2")
+                            }
+                        }
                     }
-                )
-
-                val cpuArch = when(System.getProperty ("os.arch")) {
-                    "aarch64" -> "aarch64"
-                    "amd64" -> "x64"
-                    "x86_64" -> "x64"
-                    else -> throw GradleException("Unsupported CPU Architecture: ${System.getProperty ("os.arch")}! Please open a bug at https://github.com/mbeddr/mps-gradle-plugin with details about your operating system and CPU.")
-
-                }
-                val dependencyString = when {
-                    Os.isFamily(Os.FAMILY_MAC) -> {
-                        "com.jetbrains.jdk:$distributionTypeVal:$version:osx-$cpuArch@tgz"
-                    }
-                    Os.isFamily(Os.FAMILY_WINDOWS) -> {
-                        "com.jetbrains.jdk:$distributionTypeVal:$version:windows-$cpuArch@tgz"
-                    }
-                    Os.isFamily(Os.FAMILY_UNIX) -> {
-                        "com.jetbrains.jdk:$distributionTypeVal:$version:linux-$cpuArch@tgz"
-                    }
-                    else -> {
-                        throw GradleException("Unsupported platform! Please open a bug at https://github.com/mbeddr/mps-gradle-plugin with details about your operating system.")
-                    }
-                }
-                val dependency = project.dependencies.create(dependencyString)
-                val configuration = configurations.detachedConfiguration(dependency)
-
-                val extractJbr = tasks.create("extractJbr", Copy::class.java) {
-                    doFirst {
-                        downloadDir.delete()
-                    }
-                    from({configuration.resolve().map { tarTree(it) }})
-                    into(downloadDir)
-                }
-
-                val jbrSubdir = when {
-                    Os.isFamily(Os.FAMILY_MAC) -> {
-                        File(downloadDir, "jbr/Contents/Home")
-                    }
-                    else -> {
-                        File(downloadDir, "jbr")
-                    }
-                }
-
-                tasks.create("downloadJbr", DownloadJbrForPlatform::class.java) {
-                    dependsOn(extractJbr)
-                    group = "Build"
-                    description = "Downloads the JetBrains Runtime for the current platform and extracts it."
-                    val directoryProperty: DirectoryProperty = layout.buildDirectory.fileValue(jbrSubdir)
-                    jbrDir.set(directoryProperty)
-                    val dirFile = directoryProperty.file("bin/java")
-                    javaExecutable.set(dirFile)
                 }
             }
+
+            tasks.register("downloadJbr", DownloadJbrForPlatform::class.java) {
+                dependsOn(extractJbr)
+                group = "Build"
+                description = "Downloads the JetBrains Runtime for the current platform and extracts it."
+
+                jbrDirProperty.set(extension.downloadDirProperty.dir(
+                    if (Os.isFamily(Os.FAMILY_MAC)) "jbr/Contents/Home"
+                    else "jbr"
+                ))
+                javaExecutableProperty.set(jbrDirProperty.file(if (Os.isFamily(Os.FAMILY_WINDOWS)) "bin/java.exe" else "bin/java"))
+            }
         }
+    }
+
+    private fun dependencyString(extension: DownloadJbrConfiguration): String {
+        val version = extension.jbrVersion
+        // from version 10 on the jbr distribution type is replaced with jbr_jcef
+        // jbr_jcef is the distribution used to start a normal desktop ide and should include everything
+        // required for running tests. While a little bit larger than jbr_nomod it should cause the least
+        // surprises when using it as a default.
+        // see https://github.com/mbeddr/build.publish.jdk/commit/10bbf7d177336179ca189fc8bb4c1262029c69da
+        val distributionType =
+                if (extension.distributionType != null) {
+                    extension.distributionType
+                } else if (Regex("""11_0_[0-9][^0-9]""").find(version) != null) {
+                    "jbr"
+                } else {
+                    "jbr_jcef"
+                }
+
+        val cpuArch = when(System.getProperty ("os.arch")) {
+            "aarch64" -> "aarch64"
+            "amd64" -> "x64"
+            "x86_64" -> "x64"
+            else -> throw GradleException("Unsupported CPU Architecture: ${System.getProperty ("os.arch")}! Please open a bug at https://github.com/mbeddr/mps-gradle-plugin with details about your operating system and CPU.")
+
+        }
+
+        val dependencyString = when {
+            Os.isFamily(Os.FAMILY_MAC) -> {
+                "com.jetbrains.jdk:$distributionType:$version:osx-$cpuArch@tgz"
+            }
+            Os.isFamily(Os.FAMILY_WINDOWS) -> {
+                "com.jetbrains.jdk:$distributionType:$version:windows-$cpuArch@tgz"
+            }
+            Os.isFamily(Os.FAMILY_UNIX) -> {
+                "com.jetbrains.jdk:$distributionType:$version:linux-$cpuArch@tgz"
+            }
+            else -> {
+                throw GradleException("Unsupported platform! Please open a bug at https://github.com/mbeddr/mps-gradle-plugin with details about your operating system.")
+            }
+        }
+
+        return dependencyString
     }
 }

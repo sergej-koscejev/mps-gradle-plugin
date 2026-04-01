@@ -1,5 +1,6 @@
 /.idea/
 /.gradle/
+/.kotlin/
 /build/
 /buildSrc/.gradle
 /buildSrc/build
@@ -18,3 +19,4 @@ test/generate-build-solution/mps-prj/solutions/my.build/build.xml
 workspace.xml
 **/*_gen*/
 .gradle
+.ideaconfig
