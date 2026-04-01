@@ -16,15 +16,13 @@ import java.util.*
 abstract class FakeBuildNumberTask : DefaultTask() {
 
     @get:InputDirectory
-    @get:Optional
     abstract val mpsDir: DirectoryProperty
 
     @TaskAction
     fun fakeBuildNumber() {
-        if (!mpsDir.isPresent){
-            throw GradleException("'mpsDir' not present!")
-        }
-        val buildProperties = mpsDir.get().files().find { "build.properties" == it.name } ?: throw GradleException("can't locate build.properties file in MPS directory")
+        val buildProperties = mpsDir.get().asFile.resolve("build.properties")
+
+        if (!buildProperties.isFile) throw GradleException("can't locate build.properties file in MPS directory")
 
         val props = Properties()
         props.load(buildProperties.inputStream())
