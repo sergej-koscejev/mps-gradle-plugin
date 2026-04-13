@@ -11,7 +11,6 @@ import org.gradle.api.logging.LogLevel
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
 import org.gradle.kotlin.dsl.newInstance
 import org.gradle.work.DisableCachingByDefault
@@ -19,25 +18,26 @@ import org.gradle.work.DisableCachingByDefault
 
 @DisableCachingByDefault(because = "calls arbitrary user code")
 @Incubating
-abstract class MpsExecute : JavaExec() {
+abstract class MpsExecute : JavaExec(), MpsProjectTask {
 
     @get:Input
-    abstract val logLevel: Property<LogLevel>
+    abstract override val logLevel: Property<LogLevel>
 
-    @get:Internal
-    abstract val mpsHome: DirectoryProperty
+    @get:Internal("covered by mpsVersion and classpath")
+    abstract override val mpsHome: DirectoryProperty
 
-    @get:Internal
-    abstract val mpsVersion: Property<String>
+    @get:Input
+    @get:Optional
+    abstract override val mpsVersion: Property<String>
 
-    @get:Internal
-    abstract val projectLocation: DirectoryProperty
+    @get:Internal("covered by sources")
+    abstract override val projectLocation: DirectoryProperty
 
     @get:Classpath
-    abstract val pluginRoots: SetProperty<Directory>
+    abstract override val pluginRoots: ConfigurableFileCollection
 
-    @get:Internal
-    abstract val macros: MapProperty<String, String>
+    @get:Internal("Folder macros are ignored for the purposes of up-to-date checks and caching")
+    abstract override val folderMacros: MapProperty<String, Directory>
 
     @get:Internal
     abstract val module: Property<String>
@@ -68,8 +68,8 @@ abstract class MpsExecute : JavaExec() {
             mutableListOf<String>().apply {
                 add("--project=${projectLocation.get().asFile}")
 
-                addPluginRoots(this, pluginRoots.get())
-                addVarMacros(this, macros)
+                addPluginRoots(this, pluginRoots)
+                addFolderMacros(this, folderMacros)
 
                 add("--module=${module.get()}")
                 add("--class=${className.get()}")
