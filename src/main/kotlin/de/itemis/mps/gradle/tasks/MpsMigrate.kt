@@ -4,10 +4,11 @@ import de.itemis.mps.gradle.TaskGroups
 import de.itemis.mps.gradle.launcher.MpsVersionDetection
 import groovy.xml.MarkupBuilder
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.ListProperty
@@ -26,19 +27,19 @@ import javax.inject.Inject
 
 @UntrackedTask(because = "Operates 'in place'")
 abstract class MpsMigrate @Inject constructor(
-    objectFactory: ObjectFactory,
+    private val objectFactory: ObjectFactory,
     providerFactory: ProviderFactory
-) : DefaultTask() {
+) : DefaultTask(), MpsProjectTask {
 
     @get:Input
-    val logLevel: Property<LogLevel> = objectFactory.property<LogLevel>().convention(project.gradle.startParameter.logLevel)
+    override val logLevel: Property<LogLevel> = objectFactory.property<LogLevel>().convention(project.gradle.startParameter.logLevel)
 
-    @get:Internal
-    val mpsHome: DirectoryProperty = objectFactory.directoryProperty()
+    @get:Internal("covered by mpsVersion and classpath")
+    override val mpsHome: DirectoryProperty = objectFactory.directoryProperty()
 
     @get:Input
     @get:Optional
-    val mpsVersion: Property<String> = objectFactory.property<String>()
+    override val mpsVersion: Property<String> = objectFactory.property<String>()
         .convention(MpsVersionDetection.fromMpsHome(project.layout, providerFactory, mpsHome.asFile))
 
     /**
@@ -57,15 +58,17 @@ abstract class MpsMigrate @Inject constructor(
     val haltOnDependencyError: Property<Boolean> = objectFactory.property<Boolean>()
 
     @get:Internal("covered by allProjectFiles")
-    val projectDirectories: ConfigurableFileCollection = objectFactory.fileCollection()
+    override val projectLocation: DirectoryProperty = objectFactory.directoryProperty()
+
+    @get:Internal("covered by allProjectFiles")
+    val projectLocations: ConfigurableFileCollection = objectFactory.fileCollection()
 
     @get:InputFiles
     @get:IgnoreEmptyDirectories
     @get:SkipWhenEmpty
-    protected val allProjectFiles = providerFactory.provider { projectDirectories.flatMap { objectFactory.fileTree().from(it) } }
-
-    @get:Internal
-    val javaExecutable: RegularFileProperty = objectFactory.fileProperty()
+    protected val allProjectFiles = providerFactory.provider {
+        effectiveProjectLocations().flatMap { objectFactory.fileTree().from(it) }
+    }
 
     @get:Nested
     @get:Optional
@@ -82,10 +85,10 @@ abstract class MpsMigrate @Inject constructor(
     val maxHeapSize: Property<String> = objectFactory.property()
 
     @get:Internal("Folder macros are ignored for the purposes of up-to-date checks and caching")
-    val folderMacros: MapProperty<String, Directory> = objectFactory.mapProperty()
+    override val folderMacros: MapProperty<String, Directory> = objectFactory.mapProperty()
 
     @get:Classpath
-    val pluginRoots: ConfigurableFileCollection = objectFactory.fileCollection()
+    override val pluginRoots: ConfigurableFileCollection = objectFactory.fileCollection()
 
     @get:Inject
     protected abstract val execOperations: ExecOperations
@@ -94,21 +97,35 @@ abstract class MpsMigrate @Inject constructor(
         group = TaskGroups.MIGRATION
     }
 
+    private fun effectiveProjectLocations(): FileCollection {
+        val hasMultiple = !projectLocations.isEmpty
+        val hasSingle = projectLocation.isPresent
+        if (hasMultiple && hasSingle) {
+            throw GradleException("Cannot set both projectLocation and projectLocations. Use one or the other.")
+        }
+        if (!hasMultiple && !hasSingle) {
+            throw GradleException("Must set either projectLocation or projectLocations.")
+        }
+        return if (hasMultiple) projectLocations else objectFactory.fileCollection().from(projectLocation)
+    }
+
     @TaskAction
     fun execute() {
         // When MPS detects that files have changed externally then instead of updating the VFS cache it complains.
         // Cleaning temporary directory helps avoid this.
         cleanTemporaryDir()
 
+        val effectiveLocations = effectiveProjectLocations()
+
         val buildFile = temporaryDir.resolve("build.xml")
-        writeBuildFile(buildFile)
+        writeBuildFile(buildFile, effectiveLocations)
 
         val mpsAntClasspath = mpsHome.asFileTree.matching {
             include("lib/ant/lib/*.jar")
             include("lib/*.jar")
         }
 
-        for(dir in projectDirectories) {
+        for (dir in effectiveLocations) {
             checkProjectLocation(dir)
         }
 
@@ -116,7 +133,7 @@ abstract class MpsMigrate @Inject constructor(
             mainClass.set("org.apache.tools.ant.launch.Launcher")
             workingDir = temporaryDir
             classpath = mpsAntClasspath
-            val executableCandidate = javaExecutable.orElse(javaLauncher.map { it.executablePath }).orNull?.toString()
+            val executableCandidate = javaLauncher.orNull?.executablePath?.asFile?.toString()
             if (executableCandidate != null) {
                 executable = executableCandidate
             }
@@ -128,7 +145,7 @@ abstract class MpsMigrate @Inject constructor(
         temporaryDir.listFiles()?.forEach { it.deleteRecursively() }
     }
 
-    private fun writeBuildFile(buildFile: File) {
+    private fun writeBuildFile(buildFile: File, effectiveLocations: FileCollection) {
         buildFile.printWriter().use { writer ->
             MarkupBuilder(writer).withGroovyBuilder {
                 "project" {
@@ -157,12 +174,12 @@ abstract class MpsMigrate @Inject constructor(
                     }
 
                     val folderMacrosValue = folderMacros.get()
-                    val allLibraries = projectDirectories
+                    val allLibraries = effectiveLocations
                         .flatMap { readLibraries(it, folderMacrosValue::get) }
                         .toSortedSet()
 
                     "migrate"(*argsToMigrate) {
-                        projectDirectories.forEach {
+                        effectiveLocations.forEach {
                             "project"("path" to it)
                         }
 
