@@ -1,6 +1,5 @@
 package de.itemis.mps.gradle.tasks
 
-import de.itemis.mps.gradle.Plugin
 import org.slf4j.LoggerFactory
 import org.w3c.dom.Document
 import java.io.File
@@ -14,6 +13,8 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.util.jar.JarFile
 import javax.xml.parsers.DocumentBuilder
 import javax.xml.parsers.DocumentBuilderFactory
+
+internal data class Plugin(var id: String, var path: String)
 
 internal val logger = LoggerFactory.getLogger("de.itemis.mps.gradle.tasks.PluginIds")!!
 

@@ -48,22 +48,8 @@ tasks.test {
 
 gradlePlugin {
     plugins {
-        register("generate-models") {
-            id = "generate-models"
-            implementationClass = "de.itemis.mps.gradle.generate.GenerateMpsProjectPlugin"
-        }
-        register("modelcheck") {
-            id = "modelcheck"
-            implementationClass = "de.itemis.mps.gradle.modelcheck.ModelcheckMpsProjectPlugin"
-        }
-        register("migrations-executor") {
-            id = "run-migrations"
-            implementationClass = "de.itemis.mps.gradle.runmigrations.RunMigrationsMpsProjectPlugin"
-        }
-        register("download-jbr") {
-            id = "download-jbr"
-            implementationClass = "de.itemis.mps.gradle.downloadJBR.DownloadJbrProjectPlugin"
-        }
+        // Plugins are provided by the common.gradle.kts precompiled script plugin.
+        // Task types are used directly by consumers.
     }
 }
 

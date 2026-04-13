@@ -1,6 +1,5 @@
 package test.modelchecking
 
-import de.itemis.mps.gradle.ErrorMessages
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.hamcrest.CoreMatchers.containsString
@@ -65,7 +64,7 @@ class MpsCheckTaskTest {
         val result = gradleRunner().withArguments("checkProject").buildAndFail()
 
         Assert.assertEquals(TaskOutcome.FAILED, result.task(":checkProject")?.outcome)
-        assertThat(result.output, containsString(ErrorMessages.noMpsProjectIn(testProjectDir.root.canonicalFile)))
+        assertThat(result.output, containsString("Directory does not contain an MPS project: ${testProjectDir.root.canonicalFile}"))
     }
 
     @Test

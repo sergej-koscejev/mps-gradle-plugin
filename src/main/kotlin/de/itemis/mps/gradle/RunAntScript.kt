@@ -1,7 +1,6 @@
 package de.itemis.mps.gradle;
 
 import org.gradle.api.DefaultTask
-import org.gradle.api.Project
 import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.tasks.Input
@@ -9,7 +8,6 @@ import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.ExecOperations
-import java.io.File
 import javax.inject.Inject
 
 abstract class RunAntScript : DefaultTask() {
@@ -61,7 +59,7 @@ abstract class RunAntScript : DefaultTask() {
             }
         }
 
-        if(logging.level != null && logging.level != LogLevel.LIFECYCLE && !allArgs.any { it.startsWith("-Dmps.ant.log=") }) {
+        if (logging.level != null && logging.level != LogLevel.LIFECYCLE && !allArgs.any { it.startsWith("-Dmps.ant.log=") }) {
             allArgs += "-Dmps.ant.log=${logging.level.toString().lowercase()}"
         }
 
@@ -71,8 +69,29 @@ abstract class RunAntScript : DefaultTask() {
 
         val targets = if (incremental) { targets - "clean" } else { targets }
 
-        project.runAnt(execOperations, executable, project.rootDir, allArgs + "-buildfile" + project.file(script).toString() + targets,
-            includeDefaultClasspath, scriptClasspath)
+        val effectiveExecutable = executable ?: project.findProperty("itemis.mps.gradle.ant.defaultJavaExecutable")
+
+        execOperations.javaexec {
+            if (effectiveExecutable != null) {
+                executable(effectiveExecutable)
+            }
+
+            mainClass.set("org.apache.tools.ant.launch.Launcher")
+            workingDir = project.rootDir
+
+            if (includeDefaultClasspath) {
+                val defaultClasspath = project.findProperty("itemis.mps.gradle.ant.defaultScriptClasspath")
+                if (defaultClasspath != null) {
+                    classpath(defaultClasspath)
+                }
+            }
+
+            if (scriptClasspath != null) {
+                classpath(scriptClasspath)
+            }
+
+            args(allArgs + "-buildfile" + project.file(script).toString() + targets)
+        }
     }
 }
 
@@ -85,34 +104,5 @@ abstract class BuildLanguages : RunAntScript() {
  abstract class TestLanguages : RunAntScript() {
     init {
         targets = listOf("clean", "generate", "assemble", "check")
-    }
-}
-
-internal fun Project.runAnt(execOperations: ExecOperations, executable: Any?, workingDir: File, args: List<String>,
-                           includeDefaultClasspath: Boolean = true,
-                           scriptClasspath: Any? = null
-) {
-    val effectiveExecutable = executable ?: project.findProperty("itemis.mps.gradle.ant.defaultJavaExecutable")
-
-    execOperations.javaexec {
-        if (effectiveExecutable != null) {
-            executable(effectiveExecutable)
-        }
-
-        mainClass.set("org.apache.tools.ant.launch.Launcher")
-        this@javaexec.workingDir = workingDir
-
-        if (includeDefaultClasspath) {
-            val defaultClasspath = project.findProperty("itemis.mps.gradle.ant.defaultScriptClasspath")
-            if (defaultClasspath != null) {
-                classpath(defaultClasspath)
-            }
-        }
-
-        if (scriptClasspath != null) {
-            classpath(scriptClasspath)
-        }
-
-        args(args)
     }
 }
