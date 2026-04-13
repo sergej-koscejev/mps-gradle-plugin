@@ -70,9 +70,11 @@ abstract class MpsMigrate @Inject constructor(
         effectiveProjectLocations().flatMap { objectFactory.fileTree().from(it) }
     }
 
-    @get:Nested
-    @get:Optional
-    val javaLauncher: Property<JavaLauncher> = objectFactory.property()
+    private val javaLauncherProperty: Property<JavaLauncher> = objectFactory.property()
+
+    @Nested
+    @Optional
+    override fun getJavaLauncher(): Property<JavaLauncher> = javaLauncherProperty
 
     @get:Input
     val jvmArgs: ListProperty<String> = objectFactory.listProperty()
@@ -133,7 +135,7 @@ abstract class MpsMigrate @Inject constructor(
             mainClass.set("org.apache.tools.ant.launch.Launcher")
             workingDir = temporaryDir
             classpath = mpsAntClasspath
-            val executableCandidate = javaLauncher.orNull?.executablePath?.asFile?.toString()
+            val executableCandidate = getJavaLauncher().orNull?.executablePath?.asFile?.toString()
             if (executableCandidate != null) {
                 executable = executableCandidate
             }
