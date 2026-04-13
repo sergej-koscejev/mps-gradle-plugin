@@ -1,16 +1,17 @@
 package de.itemis.mps.gradle;
 
+import de.itemis.mps.gradle.tasks.MpsTask
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.LogLevel
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.*
+import org.gradle.jvm.toolchain.JavaLauncher
 import org.gradle.process.ExecOperations
 import javax.inject.Inject
 
-abstract class RunAntScript : DefaultTask() {
+abstract class RunAntScript : DefaultTask(), MpsTask {
     @Input
     lateinit var script: Any
     @Input
@@ -27,6 +28,15 @@ abstract class RunAntScript : DefaultTask() {
     var executable: Any? = null
     @get:Inject
     protected abstract val execOperations: ExecOperations
+
+    @get:Internal
+    abstract override val mpsHome: DirectoryProperty
+
+    private val javaLauncherProperty: Property<JavaLauncher> = project.objects.property(JavaLauncher::class.java)
+
+    @Nested
+    @Optional
+    override fun getJavaLauncher(): Property<JavaLauncher> = javaLauncherProperty
 
     /**
      * Whether to build incrementally.
@@ -67,9 +77,30 @@ abstract class RunAntScript : DefaultTask() {
             allArgs += "-Dmps.generator.skipUnmodifiedModels=true"
         }
 
+        if (mpsHome.isPresent) {
+            val mpsHomePath = mpsHome.get().asFile.absolutePath
+            if (!allArgs.any { it.startsWith("-Dmps.home=") }) {
+                allArgs += "-Dmps.home=$mpsHomePath"
+            }
+            if (!allArgs.any { it.startsWith("-Dmps_home=") }) {
+                allArgs += "-Dmps_home=$mpsHomePath"
+            }
+        }
+
         val targets = if (incremental) { targets - "clean" } else { targets }
 
-        val effectiveExecutable = executable ?: project.findProperty("itemis.mps.gradle.ant.defaultJavaExecutable")
+        val effectiveExecutable = executable
+            ?: getJavaLauncher().orNull?.executablePath?.asFile
+            ?: project.findProperty("itemis.mps.gradle.ant.defaultJavaExecutable")
+
+        val effectiveClasspath: FileCollection? = scriptClasspath ?: if (mpsHome.isPresent) {
+            mpsHome.asFileTree.matching {
+                include("lib/ant/lib/*.jar")
+                include("lib/*.jar")
+            }
+        } else {
+            null
+        }
 
         execOperations.javaexec {
             if (effectiveExecutable != null) {
@@ -86,8 +117,8 @@ abstract class RunAntScript : DefaultTask() {
                 }
             }
 
-            if (scriptClasspath != null) {
-                classpath(scriptClasspath)
+            if (effectiveClasspath != null) {
+                classpath(effectiveClasspath)
             }
 
             args(allArgs + "-buildfile" + project.file(script).toString() + targets)
