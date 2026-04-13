@@ -106,7 +106,7 @@ public class de/itemis/mps/gradle/Pom : groovy/lang/GroovyObject {
 	public fun withProvidedDep (Lorg/gradle/api/publish/maven/MavenPom;Lorg/gradle/api/artifacts/Configuration;)Ljava/lang/Object;
 }
 
-public abstract class de/itemis/mps/gradle/RunAntScript : org/gradle/api/DefaultTask {
+public abstract class de/itemis/mps/gradle/RunAntScript : org/gradle/api/DefaultTask, de/itemis/mps/gradle/tasks/MpsTask {
 	public field script Ljava/lang/Object;
 	public fun <init> ()V
 	public final fun build ()V
@@ -116,6 +116,8 @@ public abstract class de/itemis/mps/gradle/RunAntScript : org/gradle/api/Default
 	public final fun getIncludeDefaultArgs ()Z
 	public final fun getIncludeDefaultClasspath ()Z
 	public final fun getIncremental ()Z
+	public fun getJavaLauncher ()Lorg/gradle/api/provider/Property;
+	public abstract fun getMpsHome ()Lorg/gradle/api/file/DirectoryProperty;
 	public final fun getScript ()Ljava/lang/Object;
 	public final fun getScriptArgs ()Ljava/util/List;
 	public final fun getScriptClasspath ()Lorg/gradle/api/file/FileCollection;
@@ -158,46 +160,45 @@ public final class de/itemis/mps/gradle/tasks/ExcludedModuleMigration {
 	public fun toString ()Ljava/lang/String;
 }
 
-public abstract class de/itemis/mps/gradle/tasks/MpsCheck : org/gradle/api/tasks/JavaExec, org/gradle/api/tasks/VerificationTask {
+public abstract class de/itemis/mps/gradle/tasks/MpsCheck : org/gradle/api/tasks/JavaExec, de/itemis/mps/gradle/tasks/MpsProjectTask, org/gradle/api/tasks/VerificationTask {
 	public fun <init> ()V
 	public fun exec ()V
 	public final fun getAdditionalModelcheckBackendClasspath ()Lorg/gradle/api/file/ConfigurableFileCollection;
 	protected final fun getCompiledClasses ()Lorg/gradle/api/file/FileTree;
 	public final fun getExcludeModels ()Lorg/gradle/api/provider/ListProperty;
 	public final fun getExcludeModules ()Lorg/gradle/api/provider/ListProperty;
-	public final fun getFolderMacros ()Lorg/gradle/api/provider/MapProperty;
+	public fun getFolderMacros ()Lorg/gradle/api/provider/MapProperty;
 	public final fun getJunitFile ()Lorg/gradle/api/file/RegularFileProperty;
 	public final fun getJunitFormat ()Lorg/gradle/api/provider/Property;
-	public final fun getLogLevel ()Lorg/gradle/api/provider/Property;
+	public fun getLogLevel ()Lorg/gradle/api/provider/Property;
 	public final fun getModels ()Lorg/gradle/api/provider/ListProperty;
 	public final fun getModules ()Lorg/gradle/api/provider/ListProperty;
-	public final fun getMpsHome ()Lorg/gradle/api/file/DirectoryProperty;
-	public final fun getMpsVersion ()Lorg/gradle/api/provider/Property;
+	public fun getMpsHome ()Lorg/gradle/api/file/DirectoryProperty;
+	public fun getMpsVersion ()Lorg/gradle/api/provider/Property;
 	public final fun getParallel ()Lorg/gradle/api/provider/Property;
-	public final fun getPluginRoots ()Lorg/gradle/api/provider/SetProperty;
-	public final fun getProjectLocation ()Lorg/gradle/api/file/DirectoryProperty;
+	public fun getPluginRoots ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public fun getProjectLocation ()Lorg/gradle/api/file/DirectoryProperty;
 	protected final fun getSources ()Lorg/gradle/api/file/FileTree;
-	public final fun getVarMacros ()Lorg/gradle/api/provider/MapProperty;
 	public final fun getWarningAsError ()Lorg/gradle/api/provider/Property;
 }
 
-public abstract class de/itemis/mps/gradle/tasks/MpsExecute : org/gradle/api/tasks/JavaExec {
+public abstract class de/itemis/mps/gradle/tasks/MpsExecute : org/gradle/api/tasks/JavaExec, de/itemis/mps/gradle/tasks/MpsProjectTask {
 	public fun <init> ()V
 	public fun exec ()V
 	public final fun getAdditionalExecuteBackendClasspath ()Lorg/gradle/api/file/ConfigurableFileCollection;
 	public abstract fun getClassName ()Lorg/gradle/api/provider/Property;
+	public abstract fun getFolderMacros ()Lorg/gradle/api/provider/MapProperty;
 	public abstract fun getLogLevel ()Lorg/gradle/api/provider/Property;
-	public abstract fun getMacros ()Lorg/gradle/api/provider/MapProperty;
 	public abstract fun getMethod ()Lorg/gradle/api/provider/Property;
 	public abstract fun getMethodArguments ()Lorg/gradle/api/provider/ListProperty;
 	public abstract fun getModule ()Lorg/gradle/api/provider/Property;
 	public abstract fun getMpsHome ()Lorg/gradle/api/file/DirectoryProperty;
 	public abstract fun getMpsVersion ()Lorg/gradle/api/provider/Property;
-	public abstract fun getPluginRoots ()Lorg/gradle/api/provider/SetProperty;
+	public abstract fun getPluginRoots ()Lorg/gradle/api/file/ConfigurableFileCollection;
 	public abstract fun getProjectLocation ()Lorg/gradle/api/file/DirectoryProperty;
 }
 
-public abstract class de/itemis/mps/gradle/tasks/MpsGenerate : org/gradle/api/tasks/JavaExec {
+public abstract class de/itemis/mps/gradle/tasks/MpsGenerate : org/gradle/api/tasks/JavaExec, de/itemis/mps/gradle/tasks/MpsProjectTask {
 	public fun <init> ()V
 	public fun exec ()V
 	public final fun getAdditionalGenerateBackendClasspath ()Lorg/gradle/api/file/ConfigurableFileCollection;
@@ -205,52 +206,65 @@ public abstract class de/itemis/mps/gradle/tasks/MpsGenerate : org/gradle/api/ta
 	public final fun getEnvironmentKind ()Lorg/gradle/api/provider/Property;
 	public final fun getExcludeModels ()Lorg/gradle/api/provider/ListProperty;
 	public final fun getExcludeModules ()Lorg/gradle/api/provider/ListProperty;
-	public final fun getFolderMacros ()Lorg/gradle/api/provider/MapProperty;
-	public final fun getLogLevel ()Lorg/gradle/api/provider/Property;
+	public fun getFolderMacros ()Lorg/gradle/api/provider/MapProperty;
+	public fun getLogLevel ()Lorg/gradle/api/provider/Property;
 	public final fun getModels ()Lorg/gradle/api/provider/ListProperty;
 	public final fun getModules ()Lorg/gradle/api/provider/ListProperty;
-	public final fun getMpsHome ()Lorg/gradle/api/file/DirectoryProperty;
-	public final fun getMpsVersion ()Lorg/gradle/api/provider/Property;
+	public fun getMpsHome ()Lorg/gradle/api/file/DirectoryProperty;
+	public fun getMpsVersion ()Lorg/gradle/api/provider/Property;
 	public final fun getParallelGenerationThreads ()Lorg/gradle/api/provider/Property;
-	public final fun getPluginRoots ()Lorg/gradle/api/file/ConfigurableFileCollection;
-	public final fun getProjectLocation ()Lorg/gradle/api/file/DirectoryProperty;
+	public fun getPluginRoots ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public fun getProjectLocation ()Lorg/gradle/api/file/DirectoryProperty;
 	protected final fun getSources ()Lorg/gradle/api/file/FileTree;
 	public final fun getStrictMode ()Lorg/gradle/api/provider/Property;
-	public final fun getVarMacros ()Lorg/gradle/api/provider/MapProperty;
 }
 
-public abstract class de/itemis/mps/gradle/tasks/MpsMigrate : org/gradle/api/DefaultTask {
+public abstract class de/itemis/mps/gradle/tasks/MpsMigrate : org/gradle/api/DefaultTask, de/itemis/mps/gradle/tasks/MpsProjectTask {
 	public fun <init> (Lorg/gradle/api/model/ObjectFactory;Lorg/gradle/api/provider/ProviderFactory;)V
 	public final fun execute ()V
 	protected final fun getAllProjectFiles ()Lorg/gradle/api/provider/Provider;
 	public final fun getAntJvmArgs ()Lorg/gradle/api/provider/ListProperty;
 	protected abstract fun getExecOperations ()Lorg/gradle/process/ExecOperations;
-	public final fun getFolderMacros ()Lorg/gradle/api/provider/MapProperty;
+	public fun getFolderMacros ()Lorg/gradle/api/provider/MapProperty;
 	public final fun getHaltOnDependencyError ()Lorg/gradle/api/provider/Property;
 	public final fun getHaltOnPrecheckFailure ()Lorg/gradle/api/provider/Property;
-	public final fun getJavaExecutable ()Lorg/gradle/api/file/RegularFileProperty;
-	public final fun getJavaLauncher ()Lorg/gradle/api/provider/Property;
+	public fun getJavaLauncher ()Lorg/gradle/api/provider/Property;
 	public final fun getJvmArgs ()Lorg/gradle/api/provider/ListProperty;
-	public final fun getLogLevel ()Lorg/gradle/api/provider/Property;
+	public fun getLogLevel ()Lorg/gradle/api/provider/Property;
 	public final fun getMaxHeapSize ()Lorg/gradle/api/provider/Property;
-	public final fun getMpsHome ()Lorg/gradle/api/file/DirectoryProperty;
-	public final fun getMpsVersion ()Lorg/gradle/api/provider/Property;
-	public final fun getPluginRoots ()Lorg/gradle/api/file/ConfigurableFileCollection;
-	public final fun getProjectDirectories ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public fun getMpsHome ()Lorg/gradle/api/file/DirectoryProperty;
+	public fun getMpsVersion ()Lorg/gradle/api/provider/Property;
+	public fun getPluginRoots ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public fun getProjectLocation ()Lorg/gradle/api/file/DirectoryProperty;
+	public final fun getProjectLocations ()Lorg/gradle/api/file/ConfigurableFileCollection;
 }
 
-public class de/itemis/mps/gradle/tasks/Remigrate : org/gradle/api/tasks/JavaExec {
+public abstract interface class de/itemis/mps/gradle/tasks/MpsProjectTask : de/itemis/mps/gradle/tasks/MpsTask {
+	public abstract fun getFolderMacros ()Lorg/gradle/api/provider/MapProperty;
+	public abstract fun getLogLevel ()Lorg/gradle/api/provider/Property;
+	public abstract fun getMpsVersion ()Lorg/gradle/api/provider/Property;
+	public abstract fun getPluginRoots ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public abstract fun getProjectLocation ()Lorg/gradle/api/file/DirectoryProperty;
+}
+
+public abstract interface class de/itemis/mps/gradle/tasks/MpsTask : org/gradle/api/Task {
+	public abstract fun getJavaLauncher ()Lorg/gradle/api/provider/Property;
+	public abstract fun getMpsHome ()Lorg/gradle/api/file/DirectoryProperty;
+}
+
+public class de/itemis/mps/gradle/tasks/Remigrate : org/gradle/api/tasks/JavaExec, de/itemis/mps/gradle/tasks/MpsProjectTask {
 	public fun <init> (Lorg/gradle/api/model/ObjectFactory;Lorg/gradle/api/provider/ProviderFactory;)V
 	public final fun excludeModuleMigration (Ljava/lang/String;I)V
 	public fun exec ()V
 	public final fun getAdditionalClasspath ()Lorg/gradle/api/file/ConfigurableFileCollection;
 	protected final fun getAllProjectFiles ()Lorg/gradle/api/provider/Provider;
 	public final fun getExcludedModuleMigrations ()Lorg/gradle/api/provider/SetProperty;
-	public final fun getFolderMacros ()Lorg/gradle/api/provider/MapProperty;
-	public final fun getLogLevel ()Lorg/gradle/api/provider/Property;
-	public final fun getMpsHome ()Lorg/gradle/api/file/DirectoryProperty;
-	public final fun getMpsVersion ()Lorg/gradle/api/provider/Property;
-	public final fun getPluginRoots ()Lorg/gradle/api/file/ConfigurableFileCollection;
-	public final fun getProjectDirectories ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public fun getFolderMacros ()Lorg/gradle/api/provider/MapProperty;
+	public fun getLogLevel ()Lorg/gradle/api/provider/Property;
+	public fun getMpsHome ()Lorg/gradle/api/file/DirectoryProperty;
+	public fun getMpsVersion ()Lorg/gradle/api/provider/Property;
+	public fun getPluginRoots ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public fun getProjectLocation ()Lorg/gradle/api/file/DirectoryProperty;
+	public final fun getProjectLocations ()Lorg/gradle/api/file/ConfigurableFileCollection;
 }
 
