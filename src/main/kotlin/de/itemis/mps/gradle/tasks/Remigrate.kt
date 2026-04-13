@@ -4,10 +4,12 @@ import de.itemis.mps.gradle.BackendConfigurations
 import de.itemis.mps.gradle.TaskGroups
 import de.itemis.mps.gradle.launcher.MpsBackendBuilder
 import de.itemis.mps.gradle.launcher.MpsVersionDetection
+import org.gradle.api.GradleException
 import org.gradle.api.Incubating
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
@@ -25,34 +27,39 @@ import javax.inject.Inject
 @Incubating
 @UntrackedTask(because = "Operates 'in place'")
 open class Remigrate @Inject constructor(
-    objectFactory: ObjectFactory,
+    private val objectFactory: ObjectFactory,
     providerFactory: ProviderFactory
-) : JavaExec() {
+) : JavaExec(), MpsProjectTask {
 
     @get:Input
-    val logLevel: Property<LogLevel> = objectFactory.property<LogLevel>().convention(project.gradle.startParameter.logLevel)
+    override val logLevel: Property<LogLevel> = objectFactory.property<LogLevel>().convention(project.gradle.startParameter.logLevel)
 
-    @get:Internal
-    val mpsHome: DirectoryProperty = objectFactory.directoryProperty()
+    @get:Internal("covered by mpsVersion and classpath")
+    override val mpsHome: DirectoryProperty = objectFactory.directoryProperty()
 
     @get:Input
     @get:Optional
-    val mpsVersion: Property<String> = objectFactory.property<String>()
+    override val mpsVersion: Property<String> = objectFactory.property<String>()
         .convention(MpsVersionDetection.fromMpsHome(project.layout, providerFactory, mpsHome.asFile))
 
     @get:Internal("covered by allProjectFiles")
-    val projectDirectories: ConfigurableFileCollection = objectFactory.fileCollection()
+    override val projectLocation: DirectoryProperty = objectFactory.directoryProperty()
+
+    @get:Internal("covered by allProjectFiles")
+    val projectLocations: ConfigurableFileCollection = objectFactory.fileCollection()
 
     @get:InputFiles
     @get:SkipWhenEmpty
     @get:IgnoreEmptyDirectories
-    protected val allProjectFiles = providerFactory.provider { projectDirectories.flatMap { objectFactory.fileTree().from(it) } }
+    protected val allProjectFiles = providerFactory.provider {
+        effectiveProjectLocations().flatMap { objectFactory.fileTree().from(it) }
+    }
 
     @get:Internal("Folder macros are ignored for the purposes of up-to-date checks and caching")
-    val folderMacros: MapProperty<String, Directory> = objectFactory.mapProperty()
+    override val folderMacros: MapProperty<String, Directory> = objectFactory.mapProperty()
 
     @get:Classpath
-    val pluginRoots: ConfigurableFileCollection = objectFactory.fileCollection()
+    override val pluginRoots: ConfigurableFileCollection = objectFactory.fileCollection()
 
     @get:Internal
     val additionalClasspath: ConfigurableFileCollection =
@@ -75,7 +82,7 @@ open class Remigrate @Inject constructor(
         argumentProviders.add(CommandLineArgumentProvider {
             val result = mutableListOf<String>()
 
-            for (dir in projectDirectories) {
+            for (dir in effectiveProjectLocations()) {
                 result.add("--project=$dir")
             }
 
@@ -111,10 +118,22 @@ open class Remigrate @Inject constructor(
 
     @TaskAction
     override fun exec() {
-        for (dir in projectDirectories) {
+        for (dir in effectiveProjectLocations()) {
             checkProjectLocation(dir)
         }
         super.exec()
+    }
+
+    private fun effectiveProjectLocations(): FileCollection {
+        val hasMultiple = !projectLocations.isEmpty
+        val hasSingle = projectLocation.isPresent
+        if (hasMultiple && hasSingle) {
+            throw GradleException("Cannot set both projectLocation and projectLocations. Use one or the other.")
+        }
+        if (!hasMultiple && !hasSingle) {
+            throw GradleException("Must set either projectLocation or projectLocations.")
+        }
+        return if (hasMultiple) projectLocations else objectFactory.fileCollection().from(projectLocation)
     }
 
     private fun initialBackendClasspath() = mpsHome.asFileTree.matching {
