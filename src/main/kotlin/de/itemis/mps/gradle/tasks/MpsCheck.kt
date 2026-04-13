@@ -5,43 +5,43 @@ import de.itemis.mps.gradle.TaskGroups
 import de.itemis.mps.gradle.launcher.MpsBackendBuilder
 import de.itemis.mps.gradle.launcher.MpsVersionDetection
 import org.gradle.api.Incubating
-import org.gradle.api.file.*
+import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileTree
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
 import org.gradle.kotlin.dsl.*
 import org.gradle.process.CommandLineArgumentProvider
 
 @CacheableTask
 @Incubating
-abstract class MpsCheck : JavaExec(), VerificationTask {
+abstract class MpsCheck : JavaExec(), VerificationTask, MpsProjectTask {
 
     @get:Input
-    val logLevel: Property<LogLevel> = objectFactory.property<LogLevel>().convention(project.gradle.startParameter.logLevel)
+    override val logLevel: Property<LogLevel> = objectFactory.property<LogLevel>().convention(project.gradle.startParameter.logLevel)
 
-    @get:Internal("covered by mpsVersion, classpath")
-    val mpsHome: DirectoryProperty = objectFactory.directoryProperty()
+    @get:Internal("covered by mpsVersion and classpath")
+    override val mpsHome: DirectoryProperty = objectFactory.directoryProperty()
 
     @get:Input
     @get:Optional
-    val mpsVersion: Property<String> = objectFactory.property<String>()
+    override val mpsVersion: Property<String> = objectFactory.property<String>()
         .convention(MpsVersionDetection.fromMpsHome(project.layout, providerFactory, mpsHome.asFile))
 
-    @get:Internal("only modules and models matter, covered by #sources")
-    val projectLocation: DirectoryProperty =
+    @get:Internal("covered by sources")
+    override val projectLocation: DirectoryProperty =
         objectFactory.directoryProperty().convention(project.layout.projectDirectory)
 
     @get:Classpath
-    val pluginRoots: SetProperty<Directory> = objectFactory.setProperty()
+    override val pluginRoots: ConfigurableFileCollection = objectFactory.fileCollection()
 
     @get:Internal("Folder macros are ignored for the purposes of up-to-date checks and caching")
-    val folderMacros: MapProperty<String, Directory> = objectFactory.mapProperty()
-
-    @get:Input
-    val varMacros: MapProperty<String, String> = objectFactory.mapProperty()
+    override val folderMacros: MapProperty<String, Directory> = objectFactory.mapProperty()
 
     @get:Input
     val models: ListProperty<String> = objectFactory.listProperty()
@@ -101,9 +101,8 @@ abstract class MpsCheck : JavaExec(), VerificationTask {
 
             result.add("--project=${projectLocation.get().asFile}")
 
-            addPluginRoots(result, pluginRoots.get())
+            addPluginRoots(result, pluginRoots)
             addFolderMacros(result, folderMacros)
-            addVarMacros(result, varMacros)
 
             // Only a limited subset of checkers is registered in MPS environment, IDEA environment is necessary for
             // proper checking.
