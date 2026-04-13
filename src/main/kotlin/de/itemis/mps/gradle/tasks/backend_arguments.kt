@@ -1,5 +1,6 @@
 package de.itemis.mps.gradle.tasks
 
+import de.itemis.mps.gradle.ErrorMessages
 import org.gradle.api.GradleException
 import org.gradle.api.file.Directory
 import org.gradle.api.file.FileCollection
@@ -12,7 +13,7 @@ internal fun checkProjectLocation(projectLocation: Provider<out FileSystemLocati
 
 internal fun checkProjectLocation(projectLocation: File) {
     if (!projectLocation.resolve(".mps").isDirectory) {
-        throw GradleException("Directory does not contain an MPS project: $projectLocation")
+        throw GradleException(ErrorMessages.noMpsProjectIn(projectLocation))
     }
 }
 
