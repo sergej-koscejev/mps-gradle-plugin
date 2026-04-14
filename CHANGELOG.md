@@ -4,7 +4,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 3.0.0 (Unreleased)
 
-- TBD
+### Removed
+
+- Old plugins (`generate-models`, `modelcheck`, `run-migrations`, `download-jbr`) have been removed. Use the task types
+  (`MpsGenerate`, `MpsCheck`, `MpsMigrate`, `Remigrate`, `DownloadJbrForPlatform`) directly instead.
+
+### Added
+
+- `MpsTask` interface for any task that operates on an MPS installation. Provides `mpsHome`, `mpsVersion`, and
+  `javaLauncher` properties. Implemented by all MPS task types including `RunAntScript`.
+- `MpsProjectTask` interface (extends `MpsTask`) for tasks that operate on MPS projects. Provides `projectLocation`,
+  `pluginRoots`, `folderMacros`, and `logLevel` properties. Implemented by `MpsGenerate`, `MpsCheck`, `MpsExecute`,
+  `MpsMigrate`, and `Remigrate`.
+- Both interfaces allow bulk configuration via `tasks.withType<MpsTask>()` and `tasks.withType<MpsProjectTask>()`.
+
+### Changed
+
+- `MpsCheck`, `MpsExecute`: `pluginRoots` changed from `SetProperty<Directory>` to `ConfigurableFileCollection`.
+- `MpsCheck`, `MpsExecute`: `macros`/`varMacros` replaced with `folderMacros: MapProperty<String, Directory>`.
+- `MpsMigrate`, `Remigrate`: `projectDirectories` renamed to `projectLocations`.
+- `MpsMigrate`: `javaExecutable` removed in favor of `javaLauncher` from `MpsTask`.
+- `RunAntScript`: derives Ant classpath from `mpsHome` when `scriptClasspath` is not set. Passes `mps.home` and
+  `mps_home` as Ant properties.
 
 ## 1.30.1
 
