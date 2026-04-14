@@ -27,7 +27,8 @@ Parameters:
 
 * `projectLocation` - the location of the MPS project. Default is the Gradle project directory.
 * `additionalExecuteBackendClasspath` - any extra libraries that should be on the classpath of the execute backend.
-* `macros` - variables/macros that are necessary to open the project.
+* `folderMacros` - path variables/macros that are necessary to open the project. Keys are macro names, values are
+  directories.
 * `mpsHome` - the home directory of the MPS distribution (or RCP) to use for testing.
 * `mpsVersion` - the MPS version, such as "2021.3". Default is autodetection by reading `$mpsHome/build.properties`.
 * `pluginRoots` - directories containing additional plugins to load.

@@ -1,13 +1,6 @@
 ## `MpsGenerate` Task Type
 
-This task improves over the [`generate` plugin](../plugins/generate.md) above and fixes some of its deficiencies.
-
-The `generate` extension provided by the eponymous plugin can only be configured once per Gradle project. Generating
-multiple subprojects or multiple sets of models is not possible without resorting to tricks. In addition, the extension
-only has limited support for lazy configuration and does not support Gradle build cache.
-
-The `MpsGenerate` task works similarly to the `generate` task created by the `generate` plugin but allows defining
-multiple instances of itself, supports lazy configuration and caching.
+Generate a specific or all models in a project.
 
 ### Usage
 
@@ -32,10 +25,8 @@ Parameters:
   included or excluded from generation.
 * `additionalGenerateBackendClasspath` - any extra libraries that should be on the classpath of the generate
   backend.
-* `folderMacros` - path variables/macros that are necessary to open the project. Path macros are not considered part of
-  Gradle build cache key.
-* `varMacros` - non-path variables/macros that are necessary to open the project. Variable macros *are* considered part
-  of Gradle build cache key.
+* `folderMacros` - path variables/macros that are necessary to open the project. Keys are macro names, values are
+  directories. Path macros are not considered part of Gradle build cache key.
 * `mpsHome` - the home directory of the MPS distribution (or RCP) to use for testing.
 * `mpsVersion` - the MPS version, such as "2021.3". Autodetected by reading `$mpsHome/build.properties` by default.
 * `pluginRoots` - directories with additional plugins to load.

@@ -10,11 +10,15 @@ because they may not exist yet when the build is started.
 
 Parameters:
 
-- `script`: path to the ANT to execute
+- `script`: path to the ANT to execute.
 - `scriptClasspath`: classpath used for the JVM that will execute the generated ANT script. Needs to contain ANT to be
-  able to run the build script. See below section "Providing Global Defaults" for project wide defaults.
+  able to run the build script. If not set and `mpsHome` is set, the classpath is derived from the MPS installation.
+  See below section "Providing Global Defaults" for project wide defaults.
 - `scriptArgs`: additional command line arguments provided to the JVM that will execute the generated ANT scripts. This
   is often used to provide property valued via `-Dprop=value`. See below section "Providing Global Defaults" for project wide defaults.
+- `mpsHome`: the MPS installation directory. When set, `mps.home` and `mps_home` are passed as Ant properties
+  automatically, and the Ant classpath is derived from the MPS installation if `scriptClasspath` is not set.
+- `javaLauncher`: the Java launcher to use for running MPS. Takes precedence over `executable` and the global default.
 - `executable`: the `java` executable to use. Optional. If `itemis.mps.gradle.ant.defaultJavaExecutable` extended
   property is set, its value is used as the default value for the parameter.
 - `includeDefaultArgs`: controls whether the project-wide default values for arguments are used.
