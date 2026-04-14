@@ -62,18 +62,18 @@ class MpsExecuteTaskTest {
         val resolvedMpsHome = resolveMps.map { it.destinationDir }
 
         val generate by tasks.registering(MpsGenerate::class) {
-            mpsHome.set(layout.dir(resolvedMpsHome))
-            projectLocation.set(file("${mpsTestProjectPath.canonicalPath}"))
+            mpsHome = layout.dir(resolvedMpsHome)
+            projectLocation = file("${mpsTestProjectPath.canonicalPath}")
 
             doFirst {
                 println(resolvedMpsHome.get().listFiles()?.toList())
             }
         }
-        
+
         val execute by tasks.registering(MpsExecute::class) {
             dependsOn(generate)
-            mpsHome.set(layout.dir(resolvedMpsHome))
-            projectLocation.set(file("${mpsTestProjectPath.canonicalPath}"))
+            mpsHome = layout.dir(resolvedMpsHome)
+            projectLocation = file("${mpsTestProjectPath.canonicalPath}")
 
             doFirst {
                 println(resolvedMpsHome.get())
@@ -85,9 +85,9 @@ class MpsExecuteTaskTest {
     fun `execute with Project`() {
         buildFile.writeText(buildScriptBoilerplate("2021.3.4") + """
             execute {
-                module.set("NewSolution")
-                className.set("NewSolution.myModel.MyClass")
-                method.set("onlyProject")
+                module = "NewSolution"
+                className = "NewSolution.myModel.MyClass"
+                method = "onlyProject"
             }
         """.trimIndent())
 
@@ -100,11 +100,11 @@ class MpsExecuteTaskTest {
     fun `execute with Project and args`() {
         buildFile.writeText(buildScriptBoilerplate("2021.3.4") + """
             execute {
-                module.set("NewSolution")
-                className.set("NewSolution.myModel.MyClass")
-                method.set("projectAndArgs")
+                module = "NewSolution"
+                className = "NewSolution.myModel.MyClass"
+                method = "projectAndArgs"
 
-                methodArguments.set(listOf("arg1", "arg2"))
+                methodArguments = listOf("arg1", "arg2")
             }
         """.trimIndent())
 

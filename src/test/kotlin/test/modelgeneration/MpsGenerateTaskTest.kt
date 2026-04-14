@@ -57,7 +57,7 @@ class MpsGenerateTaskTest {
         settingsFile.writeText(settingsScriptBoilerplate())
         buildFile.writeText(buildScriptBoilerplate("2021.3.3") + """
             val generateProject by tasks.registering(MpsGenerate::class) {
-                mpsHome.set(layout.dir(resolveMps.map { it.destinationDir }))
+                mpsHome = layout.dir(resolveMps.map { it.destinationDir })
             }
         """.trimIndent())
 
@@ -78,8 +78,8 @@ class MpsGenerateTaskTest {
         settingsFile.writeText(settingsScriptBoilerplate())
         buildFile.writeText(buildScriptBoilerplate("2021.3.3") + """
             val generateProject by tasks.registering(MpsGenerate::class) {
-                mpsHome.set(layout.dir(resolveMps.map { it.destinationDir }))
-                projectLocation.set(file("mps-prj"))
+                mpsHome = layout.dir(resolveMps.map { it.destinationDir })
+                projectLocation = file("mps-prj")
             }
         """.trimIndent())
 

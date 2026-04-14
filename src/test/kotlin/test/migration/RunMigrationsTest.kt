@@ -58,7 +58,7 @@ class RunMigrationsTest {
 
                 val migrate by tasks.registering(MpsMigrate::class) {
                     projectLocations.from("$mpsTestPrjLocation")
-                    mpsHome.set(layout.dir(resolveMps.map { it.destinationDir }))
+                    mpsHome = layout.dir(resolveMps.map { it.destinationDir })
                 }
             """.trimIndent()
         )

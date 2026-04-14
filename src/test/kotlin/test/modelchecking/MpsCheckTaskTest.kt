@@ -57,8 +57,8 @@ class MpsCheckTaskTest {
         settingsFile.writeText(settingsScriptBoilerplate())
         buildFile.writeText(buildScriptBoilerplate("2021.3.3") + """
             val checkProject by tasks.registering(MpsCheck::class) {
-                mpsHome.set(layout.dir(resolveMps.map { it.destinationDir }))
-                junitFile.set(layout.buildDirectory.file("output.xml"))
+                mpsHome = layout.dir(resolveMps.map { it.destinationDir })
+                junitFile = layout.buildDirectory.file("output.xml")
             }
         """.trimIndent())
 
@@ -79,9 +79,9 @@ class MpsCheckTaskTest {
         settingsFile.writeText(settingsScriptBoilerplate())
         buildFile.writeText(buildScriptBoilerplate("2021.3.3") + """
             val checkProject by tasks.registering(MpsCheck::class) {
-                mpsHome.set(layout.dir(resolveMps.map { it.destinationDir }))
-                projectLocation.set(file("mps-prj"))
-                junitFile.set(layout.buildDirectory.file("output.xml"))
+                mpsHome = layout.dir(resolveMps.map { it.destinationDir })
+                projectLocation = file("mps-prj")
+                junitFile = layout.buildDirectory.file("output.xml")
                 pluginRoots.from(resolveMps.map { File(it.destinationDir, "plugins/mps-console") })
             }
         """.trimIndent())
@@ -104,8 +104,8 @@ class MpsCheckTaskTest {
         settingsFile.writeText(settingsScriptBoilerplate())
         buildFile.writeText(buildScriptBoilerplate("2021.3.3") + """
             val checkProject by tasks.registering(MpsCheck::class) {
-                mpsHome.set(layout.dir(resolveMps.map { it.destinationDir }))
-                projectLocation.set(file("mps-prj"))
+                mpsHome = layout.dir(resolveMps.map { it.destinationDir })
+                projectLocation = file("mps-prj")
             }
         """.trimIndent())
 

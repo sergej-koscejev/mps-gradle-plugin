@@ -32,17 +32,17 @@ class MpsTaskInterfaceTest {
 
             val generate by tasks.registering(MpsGenerate::class)
             val check by tasks.registering(MpsCheck::class) {
-                junitFile.set(layout.buildDirectory.file("output.xml"))
+                junitFile = layout.buildDirectory.file("output.xml")
             }
             val execute by tasks.registering(MpsExecute::class) {
-                module.set("test")
-                className.set("test.Class")
-                method.set("run")
+                module = "test"
+                className = "test.Class"
+                method = "run"
             }
 
             tasks.withType<MpsProjectTask>().configureEach {
-                mpsHome.set(layout.projectDirectory.dir("test-mps-home"))
-                projectLocation.set(layout.projectDirectory.dir("test-project"))
+                mpsHome = layout.projectDirectory.dir("test-mps-home")
+                projectLocation = layout.projectDirectory.dir("test-project")
             }
 
             tasks.register("printConfig") {
@@ -88,7 +88,7 @@ class MpsTaskInterfaceTest {
             }
 
             tasks.withType<MpsTask>().configureEach {
-                mpsHome.set(layout.projectDirectory.dir("shared-mps"))
+                mpsHome = layout.projectDirectory.dir("shared-mps")
             }
 
             tasks.register("printConfig") {

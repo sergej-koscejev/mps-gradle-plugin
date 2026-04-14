@@ -61,7 +61,7 @@ class RemigrateTest {
 
                 val remigrate by tasks.registering(Remigrate::class) {
                     projectLocations.from("$mpsTestPrjLocation")
-                    mpsHome.set(layout.dir(resolveMps.map { it.destinationDir }))
+                    mpsHome = layout.dir(resolveMps.map { it.destinationDir })
 
                     excludedModuleMigrations.add(ExcludedModuleMigration("foo", 0))
                     excludeModuleMigration("bar", 1)
