@@ -7,10 +7,14 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
+import org.gradle.work.DisableCachingByDefault
 
+@DisableCachingByDefault(because = "Not worth caching: generates a small XML file from a properties file")
 class GenerateLibrariesXml extends DefaultTask {
-    @InputFile
+    @InputFile @PathSensitive(PathSensitivity.NONE)
     File defaults
 
     @Internal

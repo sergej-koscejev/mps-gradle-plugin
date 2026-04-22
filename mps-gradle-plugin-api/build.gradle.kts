@@ -1,6 +1,3 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
-
 plugins {
     `kotlin-dsl`
     `maven-publish`
@@ -73,14 +70,12 @@ publishing {
 }
 
 java {
-    targetCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_17
     withSourcesJar()
 }
 
 kotlin {
     compilerOptions {
-        jvmTarget = JvmTarget.fromTarget(libs.versions.kotlinJvmTarget.get())
-        apiVersion = KotlinVersion.fromVersion(libs.versions.kotlinApi.get())
         allWarningsAsErrors = true
     }
 }

@@ -66,6 +66,7 @@ abstract class MpsMigrate @Inject constructor(
     @get:InputFiles
     @get:IgnoreEmptyDirectories
     @get:SkipWhenEmpty
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     protected val allProjectFiles = providerFactory.provider {
         effectiveProjectLocations().flatMap { objectFactory.fileTree().from(it) }
     }

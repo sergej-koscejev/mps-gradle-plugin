@@ -9,14 +9,16 @@ import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.jvm.toolchain.JavaLauncher
 import org.gradle.process.ExecOperations
+import org.gradle.work.DisableCachingByDefault
 import javax.inject.Inject
 
+@DisableCachingByDefault(because = "Runs an Ant script that builds MPS languages and has non-trivial, external outputs")
 abstract class RunAntScript : DefaultTask(), MpsTask {
     @Input
     lateinit var script: Any
     @Input
     var targets: List<String> = emptyList()
-    @Optional @InputFiles
+    @Optional @Classpath
     var scriptClasspath: FileCollection? = null
     @Input
     var scriptArgs: List<String> = emptyList()
@@ -126,13 +128,15 @@ abstract class RunAntScript : DefaultTask(), MpsTask {
     }
 }
 
+@DisableCachingByDefault(because = "Runs an Ant script that builds MPS languages and has non-trivial, external outputs")
 abstract class BuildLanguages : RunAntScript() {
     init {
         targets = listOf("clean", "generate", "assemble")
     }
 }
 
- abstract class TestLanguages : RunAntScript() {
+@DisableCachingByDefault(because = "Runs an Ant script that tests MPS languages and has non-trivial, external outputs")
+abstract class TestLanguages : RunAntScript() {
     init {
         targets = listOf("clean", "generate", "assemble", "check")
     }

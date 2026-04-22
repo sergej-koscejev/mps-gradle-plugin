@@ -11,68 +11,62 @@ import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.LogLevel
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.*
-import org.gradle.kotlin.dsl.mapProperty
 import org.gradle.kotlin.dsl.newInstance
-import org.gradle.kotlin.dsl.property
-import org.gradle.kotlin.dsl.setProperty
 import org.gradle.process.CommandLineArgumentProvider
-import javax.inject.Inject
 
 @Incubating
 @UntrackedTask(because = "Operates 'in place'")
-open class Remigrate @Inject constructor(
-    private val objectFactory: ObjectFactory,
-    providerFactory: ProviderFactory
-) : JavaExec(), MpsProjectTask {
+abstract class Remigrate : JavaExec(), MpsProjectTask {
 
     @get:Input
-    override val logLevel: Property<LogLevel> = objectFactory.property<LogLevel>().convention(project.gradle.startParameter.logLevel)
+    abstract override val logLevel: Property<LogLevel>
 
     @get:Internal("covered by mpsVersion and classpath")
-    override val mpsHome: DirectoryProperty = objectFactory.directoryProperty()
+    abstract override val mpsHome: DirectoryProperty
 
     @get:Input
     @get:Optional
-    override val mpsVersion: Property<String> = objectFactory.property<String>()
-        .convention(MpsVersionDetection.fromMpsHome(project.layout, providerFactory, mpsHome.asFile))
+    abstract override val mpsVersion: Property<String>
 
     @get:Internal("covered by allProjectFiles")
-    override val projectLocation: DirectoryProperty = objectFactory.directoryProperty()
+    abstract override val projectLocation: DirectoryProperty
 
     @get:Internal("covered by allProjectFiles")
-    val projectLocations: ConfigurableFileCollection = objectFactory.fileCollection()
+    abstract val projectLocations: ConfigurableFileCollection
 
     @get:InputFiles
     @get:SkipWhenEmpty
     @get:IgnoreEmptyDirectories
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     protected val allProjectFiles = providerFactory.provider {
         effectiveProjectLocations().flatMap { objectFactory.fileTree().from(it) }
     }
 
     @get:Internal("Folder macros are ignored for the purposes of up-to-date checks and caching")
-    override val folderMacros: MapProperty<String, Directory> = objectFactory.mapProperty()
+    abstract override val folderMacros: MapProperty<String, Directory>
 
     @get:Classpath
-    override val pluginRoots: ConfigurableFileCollection = objectFactory.fileCollection()
+    abstract override val pluginRoots: ConfigurableFileCollection
 
     @get:Internal
-    val additionalClasspath: ConfigurableFileCollection =
-        objectFactory.fileCollection().from(initialBackendClasspath())
+    abstract val additionalClasspath: ConfigurableFileCollection
 
     @get:Input
-    val excludedModuleMigrations: SetProperty<ExcludedModuleMigration> = objectFactory.setProperty()
+    abstract val excludedModuleMigrations: SetProperty<ExcludedModuleMigration>
 
     fun excludeModuleMigration(language: String, version: Int) {
         excludedModuleMigrations.add(ExcludedModuleMigration(language, version))
     }
 
     init {
+        logLevel.convention(project.gradle.startParameter.logLevel)
+        mpsVersion.convention(MpsVersionDetection.fromMpsHome(project.layout, providerFactory, mpsHome.asFile))
+        additionalClasspath.from(mpsHome.asFileTree.matching { include("lib/**/*.jar") })
+
         val backendBuilder: MpsBackendBuilder = project.objects.newInstance(MpsBackendBuilder::class)
         backendBuilder.withMpsHomeDirectory(mpsHome).withMpsVersion(mpsVersion).configure(this)
 
@@ -134,9 +128,5 @@ open class Remigrate @Inject constructor(
             throw GradleException("Must set either projectLocation or projectLocations.")
         }
         return if (hasMultiple) projectLocations else objectFactory.fileCollection().from(projectLocation)
-    }
-
-    private fun initialBackendClasspath() = mpsHome.asFileTree.matching {
-        include("lib/**/*.jar")
     }
 }

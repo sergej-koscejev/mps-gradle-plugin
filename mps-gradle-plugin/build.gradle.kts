@@ -1,12 +1,8 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
-
 plugins {
     groovy
     `java-gradle-plugin`
     `kotlin-dsl`
     `maven-publish`
-    kotlin("jvm") version libs.versions.kotlin
     alias(libs.plugins.kotlin.compatibility.validator)
 }
 
@@ -27,7 +23,6 @@ dependencyLocking {
 dependencies {
     api(libs.itemis.gradle.git.based.versioning)
     api("de.itemis.mps:mps-gradle-plugin-api")
-    implementation(libs.kotlin.stdlib)
     implementation(libs.swiftzer.semver)
     implementation(libs.itemis.gradle.build.backends.launcher)
     testImplementation(libs.junit)
@@ -104,14 +99,12 @@ publishing {
 }
 
 java {
-    targetCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_17
     withSourcesJar()
 }
 
 kotlin {
     compilerOptions {
-        jvmTarget = JvmTarget.fromTarget(libs.versions.kotlinJvmTarget.get())
-        apiVersion = KotlinVersion.fromVersion(libs.versions.kotlinApi.get())
         allWarningsAsErrors = true
     }
 }
