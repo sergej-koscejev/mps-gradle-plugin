@@ -239,19 +239,6 @@ public abstract class de/itemis/mps/gradle/tasks/MpsMigrate : org/gradle/api/Def
 	public final fun getProjectLocations ()Lorg/gradle/api/file/ConfigurableFileCollection;
 }
 
-public abstract interface class de/itemis/mps/gradle/tasks/MpsProjectTask : de/itemis/mps/gradle/tasks/MpsTask {
-	public abstract fun getFolderMacros ()Lorg/gradle/api/provider/MapProperty;
-	public abstract fun getLogLevel ()Lorg/gradle/api/provider/Property;
-	public abstract fun getPluginRoots ()Lorg/gradle/api/file/ConfigurableFileCollection;
-	public abstract fun getProjectLocation ()Lorg/gradle/api/file/DirectoryProperty;
-}
-
-public abstract interface class de/itemis/mps/gradle/tasks/MpsTask : org/gradle/api/Task {
-	public abstract fun getJavaLauncher ()Lorg/gradle/api/provider/Property;
-	public abstract fun getMpsHome ()Lorg/gradle/api/file/DirectoryProperty;
-	public abstract fun getMpsVersion ()Lorg/gradle/api/provider/Property;
-}
-
 public class de/itemis/mps/gradle/tasks/Remigrate : org/gradle/api/tasks/JavaExec, de/itemis/mps/gradle/tasks/MpsProjectTask {
 	public fun <init> (Lorg/gradle/api/model/ObjectFactory;Lorg/gradle/api/provider/ProviderFactory;)V
 	public final fun excludeModuleMigration (Ljava/lang/String;I)V
