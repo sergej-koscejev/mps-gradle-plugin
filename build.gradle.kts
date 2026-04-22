@@ -94,25 +94,29 @@ tasks.register("setTeamCityBuildNumber") {
 
 publishing {
     repositories {
-        maven {
-            name = "itemisCloud"
-            url = uri("https://artifacts.itemis.cloud/repository/maven-mps-releases/")
-            if (project.hasProperty("artifacts.itemis.cloud.user") && project.hasProperty("artifacts.itemis.cloud.pw")) {
+        val isSnapshot = project.version.toString().endsWith("SNAPSHOT")
+        if (project.hasProperty("artifacts.itemis.cloud.user") && project.hasProperty("artifacts.itemis.cloud.pw")) {
+            maven {
+                name = "itemisCloud"
+                if (isSnapshot) {
+                    url = uri("https://artifacts.itemis.cloud/repository/maven-mps-snapshots/")
+                } else {
+                    url = uri("https://artifacts.itemis.cloud/repository/maven-mps-releases/")
+                }
                 credentials {
                     username = project.findProperty("artifacts.itemis.cloud.user") as String?
                     password = project.findProperty("artifacts.itemis.cloud.pw") as String?
                 }
             }
         }
-        if (currentBranch == "master" || currentBranch == "v1.x") {
+
+        if (!isSnapshot && project.hasProperty("gpr.token")) {
             maven {
                 name = "GitHubPackages"
                 url = uri("https://maven.pkg.github.com/mbeddr/mps-gradle-plugin")
-                if(project.hasProperty("gpr.token")) {
-                    credentials {
-                        username = project.findProperty("gpr.user") as String?
-                        password = project.findProperty("gpr.token") as String?
-                    }
+                credentials {
+                    username = project.findProperty("gpr.user") as String?
+                    password = project.findProperty("gpr.token") as String?
                 }
             }
         }
