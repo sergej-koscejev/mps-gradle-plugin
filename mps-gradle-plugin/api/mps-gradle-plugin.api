@@ -34,17 +34,6 @@ public class de/itemis/mps/gradle/GenerateLibrariesXml : org/gradle/api/DefaultT
 	public fun setOverrides (Ljava/lang/Object;)V
 }
 
-public class de/itemis/mps/gradle/GetMpsInBrowser : org/gradle/api/DefaultTask, groovy/lang/GroovyObject {
-	public static synthetic field __$stMC Z
-	protected synthetic fun $getStaticMetaClass ()Lgroovy/lang/MetaClass;
-	public fun <init> ()V
-	public fun build ()Ljava/lang/Object;
-	public fun getMetaClass ()Lgroovy/lang/MetaClass;
-	public fun getVersion ()Ljava/lang/String;
-	public fun setMetaClass (Lgroovy/lang/MetaClass;)V
-	public fun setVersion (Ljava/lang/String;)Ljava/lang/Object;
-}
-
 public class de/itemis/mps/gradle/Pom : groovy/lang/GroovyObject {
 	public static synthetic field __$stMC Z
 	protected synthetic fun $getStaticMetaClass ()Lgroovy/lang/MetaClass;

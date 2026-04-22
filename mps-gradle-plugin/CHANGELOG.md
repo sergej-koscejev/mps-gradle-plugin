@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `DownloadJbrForPlatform` task and the `downloadJBR` package have been removed. Use the
   [jbr-toolchain plugin](https://github.com/specificlanguages/mps-gradle-plugin/tree/master/subprojects/jbr-toolchain)
   if JetBrains Runtime is required.
+- `GetMpsInBrowser` task has been removed. It only opened the JetBrains download page in a browser and did not pull its
+  weight.
 
 ### Added
 
