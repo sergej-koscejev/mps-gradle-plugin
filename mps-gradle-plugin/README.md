@@ -37,8 +37,6 @@ reproducibility.
 Tasks:
 
 * [RunAntScript](docs/tasks/RunAntScript.md) -- run an MPS-generated Ant script.
-* [CreateDmg](docs/tasks/CreateDmg.md) -- (macOS only) create a .dmg installer.
-* [BundleMacosJdk](docs/tasks/BundleMacosJdk.md) -- (Linux/macOS) create a .tar.gz by combining an RCP artifact and a JDK.
 * [GenerateLibrariesXml](docs/tasks/GenerateLibrariesXml.md) -- generate a `.mps/libraries.xml` file from property files.
 * [MpsCheck](docs/tasks/MpsCheck.md) -- check (a subset of) models in a project.
 * [MpsExecute](docs/tasks/MpsExecute.md) -- execute a specified method in a generated class in the context of a running
@@ -47,9 +45,3 @@ Tasks:
   build model.
 * [MpsMigrate](docs/tasks/MpsMigrate.md) -- Run pending migrations on one or several MPS projects. 
 
-Plugins:
-
-* [generate](docs/plugins/generate.md) -- Deprecated. Generate (a subset of) models in a project without the need for a MPS
-  build model.
-* [modelcheck/checkmodels](docs/plugins/modelcheck.md) -- Deprecated. Check (a subset of) models in a project.
-* [download-jbr/downloadJbr](docs/plugins/download-jbr.md) -- Download JetBrains Runtime.

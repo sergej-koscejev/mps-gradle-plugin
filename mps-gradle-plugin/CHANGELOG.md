@@ -7,7 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 - Old plugins (`generate-models`, `modelcheck`, `run-migrations`, `download-jbr`) have been removed. Use the task types
-  (`MpsGenerate`, `MpsCheck`, `MpsMigrate`, `Remigrate`, `DownloadJbrForPlatform`) directly instead.
+  (`MpsGenerate`, `MpsCheck`, `MpsMigrate`, `Remigrate`) directly instead.
+- `CreateDmg` and `BundleMacosJdk` tasks have been removed. Building macOS installers is no longer in scope for this
+  plugin.
+- `DownloadJbrForPlatform` task and the `downloadJBR` package have been removed. Use the
+  [jbr-toolchain plugin](https://github.com/specificlanguages/mps-gradle-plugin/tree/master/subprojects/jbr-toolchain)
+  if JetBrains Runtime is required.
 
 ### Added
 
