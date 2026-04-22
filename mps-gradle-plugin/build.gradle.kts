@@ -1,16 +1,6 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
-buildscript {
-    configurations.classpath {
-        resolutionStrategy.activateDependencyLocking()
-    }
-
-    dependencies {
-        classpath("de.itemis.mps.gradle:git-based-versioning")
-    }
-}
-
 plugins {
     groovy
     `java-gradle-plugin`
