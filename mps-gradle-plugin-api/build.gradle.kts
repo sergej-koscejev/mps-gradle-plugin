@@ -2,52 +2,21 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
-    groovy
-    `java-gradle-plugin`
     `kotlin-dsl`
     `maven-publish`
-    kotlin("jvm") version libs.versions.kotlin
     alias(libs.plugins.kotlin.compatibility.validator)
 }
 
 group = "de.itemis.mps"
 
-version = "3.0.0-SNAPSHOT"
+version = "1.0.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
-    // For mps-build-backends, during tests
-    maven(url = "https://artifacts.itemis.cloud/repository/maven-mps")
 }
 
 dependencyLocking {
     lockAllConfigurations()
-}
-
-dependencies {
-    api(libs.itemis.gradle.git.based.versioning)
-    api(libs.mps.gradle.plugin.api)
-    implementation(libs.kotlin.stdlib)
-    implementation(libs.swiftzer.semver)
-    implementation(libs.itemis.gradle.build.backends.launcher)
-    testImplementation(libs.junit)
-}
-
-tasks.test {
-    useJUnit()
-}
-
-gradlePlugin {
-    plugins {
-        // Plugins are provided by the common.gradle.kts precompiled script plugin.
-        // Task types are used directly by consumers.
-    }
-}
-
-tasks.register("setTeamCityBuildNumber") {
-    doLast {
-        println("##teamcity[buildNumber '$version']")
-    }
 }
 
 publishing {
@@ -116,10 +85,8 @@ kotlin {
     }
 }
 
-apiValidation {
-    ignoredClasses.add("de.itemis.mps.gradle.Common_gradle")
-}
-
-tasks.test {
-    maxParallelForks = (Runtime.getRuntime().availableProcessors() * 2 / 3).coerceAtLeast(1)
+tasks.register("setTeamCityBuildNumber") {
+    doLast {
+        println("##teamcity[buildNumber '$version']")
+    }
 }
