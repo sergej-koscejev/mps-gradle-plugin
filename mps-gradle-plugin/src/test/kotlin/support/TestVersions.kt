@@ -10,4 +10,4 @@ const val MPS_VERSION = "2025.1.2"
  * Version of the foojay-resolver-convention plugin applied in the settings scripts that tests generate.
  * Kept in a single place so Renovate can bump it.
  */
-const val FOOJAY_RESOLVER_CONVENTION_VERSION = "0.7.0"
+const val FOOJAY_RESOLVER_CONVENTION_VERSION = "1.0.0"
