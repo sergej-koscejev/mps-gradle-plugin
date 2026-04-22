@@ -24,8 +24,6 @@ group = "de.itemis.mps"
 
 version = "3.0.0-SNAPSHOT"
 
-val mpsConfiguration = configurations.create("mps")
-
 repositories {
     mavenCentral()
     // For mps-build-backends, during tests
