@@ -9,6 +9,7 @@ import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import support.MPS_VERSION
 import support.extractTestProject
 
 class MpsGenerateTaskTest {
@@ -22,7 +23,7 @@ class MpsGenerateTaskTest {
         }
     """.trimIndent()
 
-    private fun buildScriptBoilerplate(mpsVersion: String) = """
+    private fun buildScriptBoilerplate() = """
             import de.itemis.mps.gradle.tasks.MpsGenerate
 
             plugins {
@@ -37,7 +38,7 @@ class MpsGenerateTaskTest {
             val mps = configurations.create("mps")
 
             dependencies {
-                mps("com.jetbrains:mps:$mpsVersion")
+                mps("com.jetbrains:mps:$MPS_VERSION")
             }
 
             val resolveMps by tasks.registering(Sync::class) {
@@ -55,7 +56,7 @@ class MpsGenerateTaskTest {
         extractTestProject("test-project", mpsTestPrjLocation)
 
         settingsFile.writeText(settingsScriptBoilerplate())
-        buildFile.writeText(buildScriptBoilerplate("2021.3.3") + """
+        buildFile.writeText(buildScriptBoilerplate() + """
             val generateProject by tasks.registering(MpsGenerate::class) {
                 mpsHome = layout.dir(resolveMps.map { it.destinationDir })
             }
@@ -76,7 +77,7 @@ class MpsGenerateTaskTest {
         extractTestProject("test-project", mpsTestPrjLocation)
 
         settingsFile.writeText(settingsScriptBoilerplate())
-        buildFile.writeText(buildScriptBoilerplate("2021.3.3") + """
+        buildFile.writeText(buildScriptBoilerplate() + """
             val generateProject by tasks.registering(MpsGenerate::class) {
                 mpsHome = layout.dir(resolveMps.map { it.destinationDir })
                 projectLocation = file("mps-prj")

@@ -7,6 +7,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import support.MPS_VERSION
 import support.extractTestProject
 import java.io.File
 
@@ -54,7 +55,7 @@ class RemigrateTest {
 
                 val mps = configurations.create("mps")
                 dependencies {
-                    mps("com.jetbrains:mps:2021.3.2")
+                    mps("com.jetbrains:mps:$MPS_VERSION")
                 }
 
                 val resolveMps by tasks.registering(Sync::class) {

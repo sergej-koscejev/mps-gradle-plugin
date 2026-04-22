@@ -22,12 +22,12 @@
     },
     {
       "customType": "regex",
-      "description": "Update com.jetbrains:mps versions embedded in Kotlin test sources (used in generated Gradle scripts).",
+      "description": "Update the MPS_VERSION constant used by tests to spin up an MPS instance.",
       "managerFilePatterns": [
-        "/^mps-gradle-plugin/src/test/kotlin/.*\\.kt$/"
+        "/^mps-gradle-plugin/src/test/kotlin/support/TestVersions\\.kt$/"
       ],
       "matchStrings": [
-        "mps\\(\"com\\.jetbrains:mps:(?<currentValue>[^\"]+)\"\\)"
+        "const val MPS_VERSION\\s*=\\s*\"(?<currentValue>[^\"]+)\""
       ],
       "depNameTemplate": "com.jetbrains:mps",
       "datasourceTemplate": "maven",

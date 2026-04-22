@@ -7,6 +7,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import support.MPS_VERSION
 import support.extractTestProject
 import java.io.File
 
@@ -35,7 +36,7 @@ class MpsExecuteTaskTest {
         }
     """.trimIndent()
 
-    private fun buildScriptBoilerplate(mpsVersion: String) = """
+    private fun buildScriptBoilerplate() = """
         import de.itemis.mps.gradle.tasks.MpsExecute
         import de.itemis.mps.gradle.tasks.MpsGenerate
 
@@ -51,7 +52,7 @@ class MpsExecuteTaskTest {
         val mps = configurations.create("mps")
         
         dependencies {
-            mps("com.jetbrains:mps:$mpsVersion")
+            mps("com.jetbrains:mps:$MPS_VERSION")
         }
         
         val resolveMps by tasks.registering(Sync::class) {
@@ -83,7 +84,7 @@ class MpsExecuteTaskTest {
 
     @Test
     fun `execute with Project`() {
-        buildFile.writeText(buildScriptBoilerplate("2021.3.4") + """
+        buildFile.writeText(buildScriptBoilerplate() + """
             execute {
                 module = "NewSolution"
                 className = "NewSolution.myModel.MyClass"
@@ -98,7 +99,7 @@ class MpsExecuteTaskTest {
 
     @Test
     fun `execute with Project and args`() {
-        buildFile.writeText(buildScriptBoilerplate("2021.3.4") + """
+        buildFile.writeText(buildScriptBoilerplate() + """
             execute {
                 module = "NewSolution"
                 className = "NewSolution.myModel.MyClass"
