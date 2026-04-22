@@ -23,6 +23,9 @@ class RemigrateTest {
         settingsFile = testProjectDir.newFile("settings.gradle.kts")
         settingsFile.writeText(
             """
+            plugins {
+                id("org.gradle.toolchains.foojay-resolver-convention") version ("0.7.0")
+            }
             rootProject.name = "hello-world"
         """.trimIndent()
         )
