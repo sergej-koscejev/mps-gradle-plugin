@@ -8,12 +8,12 @@
   "customManagers": [
     {
       "customType": "regex",
-      "description": "Update foojay-resolver-convention plugin pinned inside Kotlin test sources (used in generated Gradle scripts).",
+      "description": "Update the FOOJAY_RESOLVER_CONVENTION_VERSION constant used by tests.",
       "managerFilePatterns": [
-        "/^mps-gradle-plugin/src/test/kotlin/.*\\.kt$/"
+        "/^mps-gradle-plugin/src/test/kotlin/support/TestVersions\\.kt$/"
       ],
       "matchStrings": [
-        "id\\(\"org\\.gradle\\.toolchains\\.foojay-resolver-convention\"\\)\\s*version\\s*\\(\"(?<currentValue>[^\"]+)\"\\)"
+        "const val FOOJAY_RESOLVER_CONVENTION_VERSION\\s*=\\s*\"(?<currentValue>[^\"]+)\""
       ],
       "depNameTemplate": "org.gradle.toolchains.foojay-resolver-convention",
       "packageNameTemplate": "org.gradle.toolchains.foojay-resolver-convention:org.gradle.toolchains.foojay-resolver-convention.gradle.plugin",

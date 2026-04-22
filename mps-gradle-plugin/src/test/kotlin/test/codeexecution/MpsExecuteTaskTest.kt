@@ -7,6 +7,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import support.FOOJAY_RESOLVER_CONVENTION_VERSION
 import support.MPS_VERSION
 import support.extractTestProject
 import java.io.File
@@ -32,7 +33,7 @@ class MpsExecuteTaskTest {
 
     private fun settingsScriptBoilerplate() = """
         plugins {
-            id("org.gradle.toolchains.foojay-resolver-convention") version ("0.7.0")
+            id("org.gradle.toolchains.foojay-resolver-convention") version ("$FOOJAY_RESOLVER_CONVENTION_VERSION")
         }
     """.trimIndent()
 

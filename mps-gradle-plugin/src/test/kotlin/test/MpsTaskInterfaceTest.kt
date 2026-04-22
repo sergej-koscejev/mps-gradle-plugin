@@ -6,6 +6,7 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import support.FOOJAY_RESOLVER_CONVENTION_VERSION
 
 class MpsTaskInterfaceTest {
     @Rule
@@ -17,7 +18,7 @@ class MpsTaskInterfaceTest {
         testProjectDir.newFile("settings.gradle.kts").writeText(
             """
             plugins {
-                id("org.gradle.toolchains.foojay-resolver-convention") version ("0.7.0")
+                id("org.gradle.toolchains.foojay-resolver-convention") version ("$FOOJAY_RESOLVER_CONVENTION_VERSION")
             }
             """.trimIndent()
         )
