@@ -31,14 +31,12 @@ abstract class RunAntScript : DefaultTask(), MpsTask {
     @get:Inject
     protected abstract val execOperations: ExecOperations
 
-    @get:Internal
-    abstract override val mpsHome: DirectoryProperty
-
-    private val javaLauncherProperty: Property<JavaLauncher> = project.objects.property(JavaLauncher::class.java)
+    @Internal
+    abstract override fun getMpsHome(): DirectoryProperty
 
     @Nested
     @Optional
-    override fun getJavaLauncher(): Property<JavaLauncher> = javaLauncherProperty
+    abstract override fun getJavaLauncher(): Property<JavaLauncher>
 
     /**
      * Whether to build incrementally.
@@ -92,7 +90,7 @@ abstract class RunAntScript : DefaultTask(), MpsTask {
         val targets = if (incremental) { targets - "clean" } else { targets }
 
         val effectiveExecutable = executable
-            ?: getJavaLauncher().orNull?.executablePath?.asFile
+            ?: javaLauncher.orNull?.executablePath?.asFile
             ?: project.findProperty("itemis.mps.gradle.ant.defaultJavaExecutable")
 
         val effectiveClasspath: FileCollection? = scriptClasspath ?: if (mpsHome.isPresent) {

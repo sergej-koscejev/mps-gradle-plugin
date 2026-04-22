@@ -20,24 +20,24 @@ import org.gradle.work.DisableCachingByDefault
 @Incubating
 abstract class MpsExecute : JavaExec(), MpsProjectTask {
 
-    @get:Input
-    abstract override val logLevel: Property<LogLevel>
+    @Input
+    abstract override fun getLogLevel(): Property<LogLevel>
 
-    @get:Internal("covered by mpsVersion and classpath")
-    abstract override val mpsHome: DirectoryProperty
+    @Internal("covered by mpsVersion and classpath")
+    abstract override fun getMpsHome(): DirectoryProperty
 
-    @get:Input
-    @get:Optional
-    abstract override val mpsVersion: Property<String>
+    @Input
+    @Optional
+    abstract override fun getMpsVersion(): Property<String>
 
-    @get:Internal("covered by sources")
-    abstract override val projectLocation: DirectoryProperty
+    @Internal("covered by sources")
+    abstract override fun getProjectLocation(): DirectoryProperty
 
-    @get:Classpath
-    abstract override val pluginRoots: ConfigurableFileCollection
+    @Classpath
+    abstract override fun getPluginRoots(): ConfigurableFileCollection
 
-    @get:Internal("Folder macros are ignored for the purposes of up-to-date checks and caching")
-    abstract override val folderMacros: MapProperty<String, Directory>
+    @Internal("Folder macros are ignored for the purposes of up-to-date checks and caching")
+    abstract override fun getFolderMacros(): MapProperty<String, Directory>
 
     @get:Internal
     abstract val module: Property<String>
@@ -52,7 +52,7 @@ abstract class MpsExecute : JavaExec(), MpsProjectTask {
     abstract val methodArguments: ListProperty<String>
 
     @get:Internal
-    val additionalExecuteBackendClasspath: ConfigurableFileCollection = objectFactory.fileCollection()
+    abstract val additionalExecuteBackendClasspath: ConfigurableFileCollection
 
     init {
         logLevel.convention(project.gradle.startParameter.logLevel)

@@ -15,61 +15,64 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
-import org.gradle.kotlin.dsl.listProperty
-import org.gradle.kotlin.dsl.mapProperty
 import org.gradle.kotlin.dsl.newInstance
-import org.gradle.kotlin.dsl.property
 import org.gradle.process.CommandLineArgumentProvider
 
 @CacheableTask
 @Incubating
 abstract class MpsGenerate : JavaExec(), MpsProjectTask {
 
-    @get:Input
-    override val logLevel: Property<LogLevel> = objectFactory.property<LogLevel>().convention(project.gradle.startParameter.logLevel)
+    @Input
+    abstract override fun getLogLevel(): Property<LogLevel>
 
-    @get:Internal("covered by mpsVersion and classpath")
-    override val mpsHome: DirectoryProperty = objectFactory.directoryProperty()
+    @Internal("covered by mpsVersion and classpath")
+    abstract override fun getMpsHome(): DirectoryProperty
 
-    @get:Input
-    @get:Optional
-    override val mpsVersion: Property<String> = objectFactory.property<String>()
-        .convention(MpsVersionDetection.fromMpsHome(project.layout, providerFactory, mpsHome.asFile))
+    @Input
+    @Optional
+    abstract override fun getMpsVersion(): Property<String>
 
-    @get:Internal("covered by sources")
-    override val projectLocation: DirectoryProperty =
-        objectFactory.directoryProperty().convention(project.layout.projectDirectory)
+    @Internal("covered by sources")
+    abstract override fun getProjectLocation(): DirectoryProperty
 
-    @get:Classpath
-    override val pluginRoots: ConfigurableFileCollection = objectFactory.fileCollection()
+    @Classpath
+    abstract override fun getPluginRoots(): ConfigurableFileCollection
 
-    @get:Internal("Folder macros are ignored for the purposes of up-to-date checks and caching")
-    override val folderMacros: MapProperty<String, Directory> = objectFactory.mapProperty()
+    @Internal("Folder macros are ignored for the purposes of up-to-date checks and caching")
+    abstract override fun getFolderMacros(): MapProperty<String, Directory>
 
     @get:Input
-    val environmentKind: Property<EnvironmentKind> = objectFactory.property<EnvironmentKind>()
-        .convention(EnvironmentKind.MPS)
+    abstract val environmentKind: Property<EnvironmentKind>
 
     @get:Input
-    val models: ListProperty<String> = objectFactory.listProperty()
+    abstract val models: ListProperty<String>
 
     @get:Input
-    val modules: ListProperty<String> = objectFactory.listProperty()
+    abstract val modules: ListProperty<String>
 
     @get:Input
-    val excludeModels: ListProperty<String> = objectFactory.listProperty()
+    abstract val excludeModels: ListProperty<String>
 
     @get:Input
-    val excludeModules: ListProperty<String> = objectFactory.listProperty()
+    abstract val excludeModules: ListProperty<String>
 
     @get:Input
-    val strictMode: Property<Boolean> = objectFactory.property<Boolean>().convention(true)
+    abstract val strictMode: Property<Boolean>
 
     @get:Input
-    val parallelGenerationThreads: Property<Int> = objectFactory.property<Int>().convention(0)
+    abstract val parallelGenerationThreads: Property<Int>
 
     @get:Internal("covered by classpath")
-    val additionalGenerateBackendClasspath: ConfigurableFileCollection = objectFactory.fileCollection()
+    abstract val additionalGenerateBackendClasspath: ConfigurableFileCollection
+
+    init {
+        logLevel.convention(project.gradle.startParameter.logLevel)
+        mpsVersion.convention(MpsVersionDetection.fromMpsHome(project.layout, providerFactory, mpsHome.asFile))
+        projectLocation.convention(project.layout.projectDirectory)
+        environmentKind.convention(EnvironmentKind.MPS)
+        strictMode.convention(true)
+        parallelGenerationThreads.convention(0)
+    }
 
     @Suppress("unused")
     @get:InputFiles

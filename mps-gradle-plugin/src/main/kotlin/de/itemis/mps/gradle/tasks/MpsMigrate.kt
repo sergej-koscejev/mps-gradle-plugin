@@ -17,30 +17,23 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.ProviderFactory
 import org.gradle.api.tasks.*
 import org.gradle.jvm.toolchain.JavaLauncher
-import org.gradle.kotlin.dsl.listProperty
-import org.gradle.kotlin.dsl.mapProperty
-import org.gradle.kotlin.dsl.property
 import org.gradle.kotlin.dsl.withGroovyBuilder
 import org.gradle.process.ExecOperations
 import java.io.File
 import javax.inject.Inject
 
 @UntrackedTask(because = "Operates 'in place'")
-abstract class MpsMigrate @Inject constructor(
-    private val objectFactory: ObjectFactory,
-    providerFactory: ProviderFactory
-) : DefaultTask(), MpsProjectTask {
+abstract class MpsMigrate : DefaultTask(), MpsProjectTask {
 
-    @get:Input
-    override val logLevel: Property<LogLevel> = objectFactory.property<LogLevel>().convention(project.gradle.startParameter.logLevel)
+    @Input
+    abstract override fun getLogLevel(): Property<LogLevel>
 
-    @get:Internal("covered by mpsVersion and classpath")
-    override val mpsHome: DirectoryProperty = objectFactory.directoryProperty()
+    @Internal("covered by mpsVersion and classpath")
+    abstract override fun getMpsHome(): DirectoryProperty
 
-    @get:Input
-    @get:Optional
-    override val mpsVersion: Property<String> = objectFactory.property<String>()
-        .convention(MpsVersionDetection.fromMpsHome(project.layout, providerFactory, mpsHome.asFile))
+    @Input
+    @Optional
+    abstract override fun getMpsVersion(): Property<String>
 
     /**
      * (Since MPS 2021.1) Whether to halt if a pre-check has failed. Note that to ignore the check for migrated
@@ -48,20 +41,20 @@ abstract class MpsMigrate @Inject constructor(
      */
     @get:Input
     @get:Optional
-    val haltOnPrecheckFailure: Property<Boolean> = objectFactory.property<Boolean>()
+    abstract val haltOnPrecheckFailure: Property<Boolean>
 
     /**
      * (Since MPS 2021.3.4) Whether to halt when a non-migrated dependency is discovered.
      */
     @get:Input
     @get:Optional
-    val haltOnDependencyError: Property<Boolean> = objectFactory.property<Boolean>()
+    abstract val haltOnDependencyError: Property<Boolean>
+
+    @Internal("covered by allProjectFiles")
+    abstract override fun getProjectLocation(): DirectoryProperty
 
     @get:Internal("covered by allProjectFiles")
-    override val projectLocation: DirectoryProperty = objectFactory.directoryProperty()
-
-    @get:Internal("covered by allProjectFiles")
-    val projectLocations: ConfigurableFileCollection = objectFactory.fileCollection()
+    abstract val projectLocations: ConfigurableFileCollection
 
     @get:InputFiles
     @get:IgnoreEmptyDirectories
@@ -71,32 +64,38 @@ abstract class MpsMigrate @Inject constructor(
         effectiveProjectLocations().flatMap { objectFactory.fileTree().from(it) }
     }
 
-    private val javaLauncherProperty: Property<JavaLauncher> = objectFactory.property()
-
     @Nested
     @Optional
-    override fun getJavaLauncher(): Property<JavaLauncher> = javaLauncherProperty
+    abstract override fun getJavaLauncher(): Property<JavaLauncher>
 
     @get:Input
-    val jvmArgs: ListProperty<String> = objectFactory.listProperty()
+    abstract val jvmArgs: ListProperty<String>
 
     @get:Input
-    val antJvmArgs: ListProperty<String> = objectFactory.listProperty()
+    abstract val antJvmArgs: ListProperty<String>
 
     @get:Input
     @get:Optional
-    val maxHeapSize: Property<String> = objectFactory.property()
+    abstract val maxHeapSize: Property<String>
 
-    @get:Internal("Folder macros are ignored for the purposes of up-to-date checks and caching")
-    override val folderMacros: MapProperty<String, Directory> = objectFactory.mapProperty()
+    @Internal("Folder macros are ignored for the purposes of up-to-date checks and caching")
+    abstract override fun getFolderMacros(): MapProperty<String, Directory>
 
-    @get:Classpath
-    override val pluginRoots: ConfigurableFileCollection = objectFactory.fileCollection()
+    @Classpath
+    abstract override fun getPluginRoots(): ConfigurableFileCollection
 
     @get:Inject
     protected abstract val execOperations: ExecOperations
 
+    @get:Inject
+    protected abstract val objectFactory: ObjectFactory
+
+    @get:Inject
+    protected abstract val providerFactory: ProviderFactory
+
     init {
+        logLevel.convention(project.gradle.startParameter.logLevel)
+        mpsVersion.convention(MpsVersionDetection.fromMpsHome(project.layout, providerFactory, mpsHome.asFile))
         group = TaskGroups.MIGRATION
     }
 
@@ -136,7 +135,7 @@ abstract class MpsMigrate @Inject constructor(
             mainClass.set("org.apache.tools.ant.launch.Launcher")
             workingDir = temporaryDir
             classpath = mpsAntClasspath
-            val executableCandidate = getJavaLauncher().orNull?.executablePath?.asFile?.toString()
+            val executableCandidate = javaLauncher.orNull?.executablePath?.asFile?.toString()
             if (executableCandidate != null) {
                 executable = executableCandidate
             }

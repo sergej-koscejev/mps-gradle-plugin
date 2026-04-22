@@ -15,61 +15,68 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
-import org.gradle.kotlin.dsl.*
+import org.gradle.kotlin.dsl.newInstance
 import org.gradle.process.CommandLineArgumentProvider
 
 @CacheableTask
 @Incubating
 abstract class MpsCheck : JavaExec(), VerificationTask, MpsProjectTask {
 
-    @get:Input
-    override val logLevel: Property<LogLevel> = objectFactory.property<LogLevel>().convention(project.gradle.startParameter.logLevel)
+    @Input
+    abstract override fun getLogLevel(): Property<LogLevel>
 
-    @get:Internal("covered by mpsVersion and classpath")
-    override val mpsHome: DirectoryProperty = objectFactory.directoryProperty()
+    @Internal("covered by mpsVersion and classpath")
+    abstract override fun getMpsHome(): DirectoryProperty
 
-    @get:Input
-    @get:Optional
-    override val mpsVersion: Property<String> = objectFactory.property<String>()
-        .convention(MpsVersionDetection.fromMpsHome(project.layout, providerFactory, mpsHome.asFile))
+    @Input
+    @Optional
+    abstract override fun getMpsVersion(): Property<String>
 
-    @get:Internal("covered by sources")
-    override val projectLocation: DirectoryProperty =
-        objectFactory.directoryProperty().convention(project.layout.projectDirectory)
+    @Internal("covered by sources")
+    abstract override fun getProjectLocation(): DirectoryProperty
 
-    @get:Classpath
-    override val pluginRoots: ConfigurableFileCollection = objectFactory.fileCollection()
+    @Classpath
+    abstract override fun getPluginRoots(): ConfigurableFileCollection
 
-    @get:Internal("Folder macros are ignored for the purposes of up-to-date checks and caching")
-    override val folderMacros: MapProperty<String, Directory> = objectFactory.mapProperty()
+    @Internal("Folder macros are ignored for the purposes of up-to-date checks and caching")
+    abstract override fun getFolderMacros(): MapProperty<String, Directory>
 
     @get:Input
-    val models: ListProperty<String> = objectFactory.listProperty()
+    abstract val models: ListProperty<String>
 
     @get:Input
-    val modules: ListProperty<String> = objectFactory.listProperty()
+    abstract val modules: ListProperty<String>
 
     @get:Input
-    val excludeModels: ListProperty<String> = objectFactory.listProperty()
+    abstract val excludeModels: ListProperty<String>
 
     @get:Input
-    val excludeModules: ListProperty<String> = objectFactory.listProperty()
+    abstract val excludeModules: ListProperty<String>
 
     @get:Input
-    val warningAsError: Property<Boolean> = objectFactory.property<Boolean>().convention(false)
+    abstract val warningAsError: Property<Boolean>
 
     @get:OutputFile
-    val junitFile: RegularFileProperty = objectFactory.fileProperty()
-        .convention(project.layout.buildDirectory.map { it.file("TEST-${this@MpsCheck.name}.xml") })
+    abstract val junitFile: RegularFileProperty
 
     @get:Input
-    val junitFormat: Property<String> = objectFactory.property<String>().convention("module-and-model")
+    abstract val junitFormat: Property<String>
 
     @get:Input
-    val parallel: Property<Boolean> = objectFactory.property<Boolean>().convention(false)
+    abstract val parallel: Property<Boolean>
 
     @get:Internal("covered by classpath")
-    val additionalModelcheckBackendClasspath: ConfigurableFileCollection = objectFactory.fileCollection()
+    abstract val additionalModelcheckBackendClasspath: ConfigurableFileCollection
+
+    init {
+        logLevel.convention(project.gradle.startParameter.logLevel)
+        mpsVersion.convention(MpsVersionDetection.fromMpsHome(project.layout, providerFactory, mpsHome.asFile))
+        projectLocation.convention(project.layout.projectDirectory)
+        warningAsError.convention(false)
+        junitFile.convention(project.layout.buildDirectory.map { it.file("TEST-${this@MpsCheck.name}.xml") })
+        junitFormat.convention("module-and-model")
+        parallel.convention(false)
+    }
 
     @Suppress("unused")
     @get:InputFiles

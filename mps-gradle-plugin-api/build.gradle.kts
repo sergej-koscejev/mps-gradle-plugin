@@ -1,7 +1,6 @@
 plugins {
-    `kotlin-dsl`
+    `java-library`
     `maven-publish`
-    alias(libs.plugins.kotlin.compatibility.validator)
 }
 
 group = "de.itemis.mps"
@@ -14,6 +13,20 @@ repositories {
 
 dependencyLocking {
     lockAllConfigurations()
+}
+
+dependencies {
+    compileOnly(gradleApi())
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+    withSourcesJar()
+}
+
+tasks.withType<JavaCompile>().configureEach {
+    options.compilerArgs.addAll(listOf("-Xlint:all", "-Werror"))
 }
 
 publishing {
@@ -46,37 +59,29 @@ publishing {
         }
     }
 
-    publications.withType<MavenPublication>().configureEach {
-        versionMapping {
-            allVariants {
-                fromResolutionResult()
-            }
-        }
-        pom {
-            url = "https://github.com/mbeddr/mps-gradle-plugin"
-            licenses {
-                license {
-                    name = "The Apache License, Version 2.0"
-                    url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
+    publications {
+        create<MavenPublication>("mavenJava") {
+            from(components["java"])
+            versionMapping {
+                allVariants {
+                    fromResolutionResult()
                 }
             }
-            scm {
-                connection = "scm:git:git://github.com/mbeddr/mps-gradle-plugin.git"
-                developerConnection = "scm:git:ssh://github.com/mbeddr/mps-gradle-plugin.git"
+            pom {
                 url = "https://github.com/mbeddr/mps-gradle-plugin"
+                licenses {
+                    license {
+                        name = "The Apache License, Version 2.0"
+                        url = "https://www.apache.org/licenses/LICENSE-2.0.txt"
+                    }
+                }
+                scm {
+                    connection = "scm:git:git://github.com/mbeddr/mps-gradle-plugin.git"
+                    developerConnection = "scm:git:ssh://github.com/mbeddr/mps-gradle-plugin.git"
+                    url = "https://github.com/mbeddr/mps-gradle-plugin"
+                }
             }
         }
-    }
-}
-
-java {
-    targetCompatibility = JavaVersion.VERSION_17
-    withSourcesJar()
-}
-
-kotlin {
-    compilerOptions {
-        allWarningsAsErrors = true
     }
 }
 

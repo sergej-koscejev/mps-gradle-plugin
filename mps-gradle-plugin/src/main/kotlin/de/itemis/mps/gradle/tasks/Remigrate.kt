@@ -22,18 +22,18 @@ import org.gradle.process.CommandLineArgumentProvider
 @UntrackedTask(because = "Operates 'in place'")
 abstract class Remigrate : JavaExec(), MpsProjectTask {
 
-    @get:Input
-    abstract override val logLevel: Property<LogLevel>
+    @Input
+    abstract override fun getLogLevel(): Property<LogLevel>
 
-    @get:Internal("covered by mpsVersion and classpath")
-    abstract override val mpsHome: DirectoryProperty
+    @Internal("covered by mpsVersion and classpath")
+    abstract override fun getMpsHome(): DirectoryProperty
 
-    @get:Input
-    @get:Optional
-    abstract override val mpsVersion: Property<String>
+    @Input
+    @Optional
+    abstract override fun getMpsVersion(): Property<String>
 
-    @get:Internal("covered by allProjectFiles")
-    abstract override val projectLocation: DirectoryProperty
+    @Internal("covered by allProjectFiles")
+    abstract override fun getProjectLocation(): DirectoryProperty
 
     @get:Internal("covered by allProjectFiles")
     abstract val projectLocations: ConfigurableFileCollection
@@ -46,11 +46,11 @@ abstract class Remigrate : JavaExec(), MpsProjectTask {
         effectiveProjectLocations().flatMap { objectFactory.fileTree().from(it) }
     }
 
-    @get:Internal("Folder macros are ignored for the purposes of up-to-date checks and caching")
-    abstract override val folderMacros: MapProperty<String, Directory>
+    @Internal("Folder macros are ignored for the purposes of up-to-date checks and caching")
+    abstract override fun getFolderMacros(): MapProperty<String, Directory>
 
-    @get:Classpath
-    abstract override val pluginRoots: ConfigurableFileCollection
+    @Classpath
+    abstract override fun getPluginRoots(): ConfigurableFileCollection
 
     @get:Internal
     abstract val additionalClasspath: ConfigurableFileCollection
