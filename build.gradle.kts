@@ -1,4 +1,3 @@
-import de.itemis.mps.gradle.GitBasedVersioning
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
@@ -23,23 +22,7 @@ plugins {
 
 group = "de.itemis.mps"
 
-val baseVersion = "3.0.0-dev"
-val currentBranch : String? = GitBasedVersioning.getGitBranch()
-
-version = if (!project.hasProperty("useSnapshot") &&
-    (project.hasProperty("forceCI") || project.hasProperty("teamcity"))
-) {
-    val prefix = when (currentBranch) {
-        null, "", "v1.x", "HEAD", "master", "main" -> ""
-        else -> "$currentBranch."
-    }
-
-    val suffix = ".${GitBasedVersioning.getGitCommitCount()}.${GitBasedVersioning.getGitShortCommitHash()}"
-
-    prefix + baseVersion + suffix
-} else {
-    "$baseVersion-SNAPSHOT"
-}
+version = "3.0.0-SNAPSHOT"
 
 val mpsConfiguration = configurations.create("mps")
 
