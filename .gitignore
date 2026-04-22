@@ -2,6 +2,7 @@
 .gradle/
 .kotlin/
 build/
+.worktrees/
 
 .DS_Store
 
