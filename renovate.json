@@ -4,6 +4,7 @@
     "config:recommended"
   ],
   "forkProcessing": "enabled",
+  "ignorePaths": [],
   "customManagers": [
     {
       "customType": "regex",
@@ -29,7 +30,8 @@
         "mps\\(\"com\\.jetbrains:mps:(?<currentValue>[^\"]+)\"\\)"
       ],
       "depNameTemplate": "com.jetbrains:mps",
-      "datasourceTemplate": "maven"
+      "datasourceTemplate": "maven",
+      "registryUrlTemplate": "https://artifacts.itemis.cloud/repository/maven-mps"
     }
   ]
 }
