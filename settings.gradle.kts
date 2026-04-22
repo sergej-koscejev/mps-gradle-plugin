@@ -9,7 +9,5 @@ plugins {
 rootProject.name = "mps-gradle-plugin"
 
 includeBuild("git-based-versioning")
-
 includeBuild("mps-gradle-plugin-api")
-
 includeBuild("mps-gradle-plugin")
