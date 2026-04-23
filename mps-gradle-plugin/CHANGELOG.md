@@ -19,7 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `MpsTask` interface for any task that operates on an MPS installation. Provides `mpsHome`, `mpsVersion`, and
-  `javaLauncher` properties. Implemented by all MPS task types including `RunAntScript`.
+  `javaLauncher` properties. Implemented by all MPS task types including `RunAntScript`. Published separately in the
+  new `de.itemis.mps:mps-gradle-plugin-api` artifact.
 - `MpsProjectTask` interface (extends `MpsTask`) for tasks that operate on MPS projects. Provides `projectLocation`,
   `pluginRoots`, `folderMacros`, and `logLevel` properties. Implemented by `MpsGenerate`, `MpsCheck`, `MpsExecute`,
   `MpsMigrate`, and `Remigrate`.
@@ -27,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The plugin now requires Gradle 9 and Java 17 (previously Gradle 8 and Java 11).
 - `MpsCheck`, `MpsExecute`: `pluginRoots` changed from `SetProperty<Directory>` to `ConfigurableFileCollection`.
 - `MpsCheck`, `MpsExecute`: `macros`/`varMacros` replaced with `folderMacros: MapProperty<String, Directory>`.
 - `MpsMigrate`, `Remigrate`: `projectDirectories` renamed to `projectLocations`.
