@@ -39,21 +39,7 @@ abstract class RunAntScript : DefaultTask(), MpsTask {
     @Optional
     abstract override fun getJavaLauncher(): Property<JavaLauncher>
 
-    /**
-     * Whether to build incrementally.
-     *
-     * Possible values:
-     * * `true` - perform an incremental build. If the [targets] list includes `clean` target it will be removed, and
-     *   `-Dmps.generator.skipUnmodifiedModels=true` will be passed to Ant.
-     * * `false` - the default. The [targets] list will not be modified and no properties will be passed to Ant. Any
-     *   outside customizations made to targets and Ant arguments are left intact so the build may in fact be
-     *   incremental.
-     */
-    @get:Input
-    abstract val incremental: Property<Boolean>
-
     init {
-        incremental.convention(false)
         scriptClasspath.convention(mpsHome.asFileTree.matching {
             include("lib/ant/lib/*.jar")
             include("lib/*.jar")
@@ -70,11 +56,6 @@ abstract class RunAntScript : DefaultTask(), MpsTask {
             allArgs += "-Dmps.ant.log=${level.toString().lowercase()}"
         }
 
-        val isIncremental = incremental.get()
-        if (isIncremental) {
-            allArgs += "-Dmps.generator.skipUnmodifiedModels=true"
-        }
-
         val mpsHomePath = mpsHome.get().asFile.absolutePath
         if (!allArgs.any { it.startsWith("-Dmps.home=") }) {
             allArgs += "-Dmps.home=$mpsHomePath"
@@ -85,7 +66,7 @@ abstract class RunAntScript : DefaultTask(), MpsTask {
 
         allArgs += "-buildfile"
         allArgs += script.get().asFile.absolutePath
-        allArgs += targets.get().let { if (isIncremental) it - "clean" else it }
+        allArgs += targets.get()
 
         execOperations.javaexec {
             if (javaLauncher.isPresent) {

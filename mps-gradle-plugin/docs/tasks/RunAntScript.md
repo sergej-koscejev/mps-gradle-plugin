@@ -21,7 +21,6 @@ Properties:
   automatically, and the Ant classpath is derived from the MPS installation if `scriptClasspath` is not set.
 - `javaLauncher`: the Java launcher used to run the Ant script. Optional.
 - `targets`: the targets to execute of the Ant files.
-- `incremental`: enable incremental build, see below. (Since 1.6.)
 
 ### Project-Wide Defaults
 
@@ -38,16 +37,3 @@ tasks.withType<RunAntScript>().configureEach {
 }
 ```
 
-### Incremental Builds
-
-Incremental builds can be enabled by setting the `incremental` property to `true`. This has the following effects:
-* The `clean` target is removed from the `targets` list.
-* Argument `-Dmps.generator.skipUnmodifiedModels=true` is passed to Ant. This property tells the MPS generator to skip
-  generating and compiling models that have not been modified.
-
-NOTE: While incremental builds are convenient, it is necessary to be aware of their limitations. To determine whether
-a model should be regenerated the generator only looks at the hash of the model contents. If the contents have not
-changed since the last generation the generation is skipped. This may not be fully correct in the general case. Changing
-the generator of a language used by the model may affect the generated code for the model, for example. Changes in
-imported models may affect the generation output of this model as well. None of these changes would be detected via the
-model contents hash.

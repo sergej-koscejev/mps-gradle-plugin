@@ -45,6 +45,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `RunAntScript`: removed the `includeDefaultArgs`, `includeDefaultClasspath`, `itemis.mps.gradle.ant.defaultScriptArgs`,
   `itemis.mps.gradle.ant.defaultScriptClasspath`, and `itemis.mps.gradle.ant.defaultJavaExecutable` escape hatches.
   Use `tasks.withType<RunAntScript>().configureEach { ... }` to share configuration across tasks.
+- `RunAntScript`: removed the `incremental` property. Pass `-Dmps.generator.skipUnmodifiedModels=true` via `scriptArgs`
+  and adjust `targets` directly if you need the previous behavior.
 - The `de.itemis.mps.gradle.common` plugin sets the convention for `MpsTask.logLevel` to Gradle's
   `gradle.startParameter.logLevel`, so MPS subprocesses log at the same level as Gradle by default.
 

@@ -51,7 +51,6 @@ public abstract class de/itemis/mps/gradle/RunAntScript : org/gradle/api/Default
 	public fun <init> ()V
 	public final fun build ()V
 	protected abstract fun getExecOperations ()Lorg/gradle/process/ExecOperations;
-	public abstract fun getIncremental ()Lorg/gradle/api/provider/Property;
 	public abstract fun getJavaLauncher ()Lorg/gradle/api/provider/Property;
 	public abstract fun getScript ()Lorg/gradle/api/file/RegularFileProperty;
 	public abstract fun getScriptArgs ()Lorg/gradle/api/provider/ListProperty;
