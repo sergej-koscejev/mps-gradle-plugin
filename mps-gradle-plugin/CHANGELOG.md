@@ -6,13 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- Old plugins (`generate-models`, `modelcheck`, `run-migrations`, `download-jbr`) have been removed. Use the task types
+- Old plugins `generate-models`, `modelcheck`, and `run-migrations` have been removed. Use the task types
   (`MpsGenerate`, `MpsCheck`, `MpsMigrate`, `Remigrate`) directly instead.
+- `download-jbr` plugin, `DownloadJbrForPlatform` task, and the `downloadJBR` package have been removed. Use the
+  [`com.specificlanguages.jbr-toolchain`](https://plugins.gradle.org/plugin/com.specificlanguages.jbr-toolchain)
+  plugin to download the JetBrains Runtime.
 - `CreateDmg` and `BundleMacosJdk` tasks have been removed. Building macOS installers is no longer in scope for this
   plugin.
-- `DownloadJbrForPlatform` task and the `downloadJBR` package have been removed. Use the
-  [jbr-toolchain plugin](https://github.com/specificlanguages/mps-gradle-plugin/tree/master/subprojects/jbr-toolchain)
-  if JetBrains Runtime is required.
 - `GetMpsInBrowser` task has been removed. It only opened the JetBrains download page in a browser and did not pull its
   weight.
 
