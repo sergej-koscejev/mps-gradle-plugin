@@ -34,9 +34,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `MpsMigrate`: `javaExecutable` removed in favor of `javaLauncher` from `MpsTask`.
 - `RunAntScript`: now requires `mpsHome`. Derives the Ant classpath from `mpsHome` when `scriptClasspath` is not set,
   and passes `mps.home` and `mps_home` as Ant properties.
-- `RunAntScript`: `scriptClasspath`, `scriptArgs`, `targets`, `incremental`, and `script` are now lazy Gradle
-  properties (`ConfigurableFileCollection`, `ListProperty<String>`, `Property<Boolean>`, `RegularFileProperty`). Use
-  `set`/`from`/`addAll` rather than direct assignment. `script` is tracked as a proper `@InputFile`, so wiring it via
+- `RunAntScript`: `scriptClasspath`, `scriptArgs`, `targets`, and `script` are now lazy Gradle properties
+  (`ConfigurableFileCollection`, `ListProperty<String>`, `RegularFileProperty`). Use `set`/`from`/`addAll` rather than
+  direct assignment. `script` is tracked as a proper `@InputFile`, so wiring it via
   `script.set(otherTask.flatMap { ... })` establishes the task dependency automatically.
 - `RunAntScript`: added `workingDirectory: DirectoryProperty` (defaults to the root project directory) so the task
   no longer reaches through `project` at execution time.
