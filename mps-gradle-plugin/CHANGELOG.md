@@ -18,12 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `MpsTask` interface for any task that operates on an MPS installation. Provides `mpsHome`, `mpsVersion`, and
-  `javaLauncher` properties. Implemented by all MPS task types including `RunAntScript`. Published separately in the
-  new `de.itemis.mps:mps-gradle-plugin-api` artifact.
-- `MpsProjectTask` interface (extends `MpsTask`) for tasks that operate on MPS projects. Provides `projectLocation`,
-  `pluginRoots`, `folderMacros`, and `logLevel` properties. Implemented by `MpsGenerate`, `MpsCheck`, `MpsExecute`,
-  `MpsMigrate`, and `Remigrate`.
+- `MpsTask` interface for any task that operates on an MPS installation. Provides `mpsHome`, `mpsVersion`,
+  `javaLauncher`, `pluginRoots`, `folderMacros`, and `logLevel` properties. Implemented by all MPS task types
+  including `RunAntScript`. Published separately in the new `de.itemis.mps:mps-gradle-plugin-api` artifact.
+- `MpsProjectTask` interface (extends `MpsTask`) for tasks that operate on an MPS project. Adds `projectLocation`.
+  Implemented by `MpsGenerate`, `MpsCheck`, `MpsExecute`, `MpsMigrate`, and `Remigrate`.
 - Both interfaces allow bulk configuration via `tasks.withType<MpsTask>()` and `tasks.withType<MpsProjectTask>()`.
 
 ### Changed
