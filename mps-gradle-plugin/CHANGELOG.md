@@ -35,8 +35,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `RunAntScript`: now requires `mpsHome`. Derives the Ant classpath from `mpsHome` when `scriptClasspath` is not set,
   and passes `mps.home` and `mps_home` as Ant properties.
 - `RunAntScript`: `scriptClasspath`, `scriptArgs`, `targets`, `incremental`, and `script` are now lazy Gradle
-  properties (`ConfigurableFileCollection`, `ListProperty<String>`, `Property<Boolean>`, `Property<String>`). Use
-  `set`/`from`/`addAll` rather than direct assignment.
+  properties (`ConfigurableFileCollection`, `ListProperty<String>`, `Property<Boolean>`, `RegularFileProperty`). Use
+  `set`/`from`/`addAll` rather than direct assignment. `script` is tracked as a proper `@InputFile`, so wiring it via
+  `script.set(otherTask.flatMap { ... })` establishes the task dependency automatically.
+- `RunAntScript`: added `workingDirectory: DirectoryProperty` (defaults to the root project directory) so the task
+  no longer reaches through `project` at execution time.
 - `RunAntScript`: uses the inherited `javaLauncher` and `logLevel` properties. The `executable` property has been
   removed (use `javaLauncher` instead); `-Dmps.ant.log` is derived from `logLevel` rather than from `task.logging.level`.
 - `RunAntScript`: removed the `includeDefaultArgs`, `includeDefaultClasspath`, `itemis.mps.gradle.ant.defaultScriptArgs`,

@@ -10,7 +10,9 @@ because they may not exist yet when the build is started.
 
 Properties:
 
-- `script`: path to the Ant script to execute.
+- `script`: the Ant script to execute (`RegularFileProperty`). Wire via `script.set(otherTask.flatMap { ... })` to
+  depend on a task that generates the script.
+- `workingDirectory`: working directory for the Ant invocation. Defaults to the root project directory.
 - `scriptClasspath`: classpath used for the JVM that will execute the generated Ant script. Needs to contain Ant to be
   able to run the build script. Defaults to `lib/ant/lib/*.jar` and `lib/*.jar` under `mpsHome`.
 - `scriptArgs`: additional command line arguments provided to the JVM that will execute the generated Ant scripts. This

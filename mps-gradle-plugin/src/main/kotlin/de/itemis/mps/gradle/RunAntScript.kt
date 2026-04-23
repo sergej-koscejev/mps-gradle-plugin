@@ -3,6 +3,8 @@ package de.itemis.mps.gradle;
 import de.itemis.mps.gradle.tasks.MpsTask
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
@@ -14,8 +16,9 @@ import javax.inject.Inject
 
 @DisableCachingByDefault(because = "Runs an Ant script that builds MPS languages and has non-trivial, external outputs")
 abstract class RunAntScript : DefaultTask(), MpsTask {
-    @get:Input
-    abstract val script: Property<String>
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val script: RegularFileProperty
 
     @get:Input
     abstract val targets: ListProperty<String>
@@ -25,6 +28,9 @@ abstract class RunAntScript : DefaultTask(), MpsTask {
 
     @get:Input
     abstract val scriptArgs: ListProperty<String>
+
+    @get:Internal("working directory has no effect on the output")
+    abstract val workingDirectory: DirectoryProperty
 
     @get:Inject
     protected abstract val execOperations: ExecOperations
@@ -52,6 +58,7 @@ abstract class RunAntScript : DefaultTask(), MpsTask {
             include("lib/ant/lib/*.jar")
             include("lib/*.jar")
         })
+        workingDirectory.convention(project.rootProject.layout.projectDirectory)
     }
 
     @TaskAction
@@ -76,17 +83,21 @@ abstract class RunAntScript : DefaultTask(), MpsTask {
             allArgs += "-Dmps_home=$mpsHomePath"
         }
 
-        val effectiveTargets = targets.get().let { if (isIncremental) it - "clean" else it }
+        allArgs += "-buildfile"
+        allArgs += script.get().asFile.absolutePath
+        allArgs += targets.get().let { if (isIncremental) it - "clean" else it }
 
         execOperations.javaexec {
-            javaLauncher.orNull?.executablePath?.asFile?.let { executable(it) }
+            if (javaLauncher.isPresent) {
+                executable(javaLauncher.get().executablePath)
+            }
 
             mainClass.set("org.apache.tools.ant.launch.Launcher")
-            workingDir = project.rootDir
+            workingDir = workingDirectory.get().asFile
 
             classpath(scriptClasspath)
 
-            args(allArgs + "-buildfile" + project.file(script.get()).toString() + effectiveTargets)
+            args(allArgs)
         }
     }
 }

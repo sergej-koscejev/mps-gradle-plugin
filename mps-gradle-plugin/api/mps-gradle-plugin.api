@@ -53,10 +53,11 @@ public abstract class de/itemis/mps/gradle/RunAntScript : org/gradle/api/Default
 	protected abstract fun getExecOperations ()Lorg/gradle/process/ExecOperations;
 	public abstract fun getIncremental ()Lorg/gradle/api/provider/Property;
 	public abstract fun getJavaLauncher ()Lorg/gradle/api/provider/Property;
-	public abstract fun getScript ()Lorg/gradle/api/provider/Property;
+	public abstract fun getScript ()Lorg/gradle/api/file/RegularFileProperty;
 	public abstract fun getScriptArgs ()Lorg/gradle/api/provider/ListProperty;
 	public abstract fun getScriptClasspath ()Lorg/gradle/api/file/ConfigurableFileCollection;
 	public abstract fun getTargets ()Lorg/gradle/api/provider/ListProperty;
+	public abstract fun getWorkingDirectory ()Lorg/gradle/api/file/DirectoryProperty;
 }
 
 public abstract class de/itemis/mps/gradle/TestLanguages : de/itemis/mps/gradle/RunAntScript {

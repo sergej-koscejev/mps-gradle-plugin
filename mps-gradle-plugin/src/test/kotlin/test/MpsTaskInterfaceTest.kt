@@ -85,7 +85,7 @@ class MpsTaskInterfaceTest {
 
             val generate by tasks.registering(MpsGenerate::class)
             val buildLangs by tasks.registering(BuildLanguages::class) {
-                script = "build.xml"
+                script = layout.projectDirectory.file("build.xml")
             }
 
             tasks.withType<MpsTask>().configureEach {
