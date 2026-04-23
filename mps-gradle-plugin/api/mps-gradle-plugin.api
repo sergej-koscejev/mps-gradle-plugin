@@ -48,26 +48,15 @@ public class de/itemis/mps/gradle/Pom : groovy/lang/GroovyObject {
 }
 
 public abstract class de/itemis/mps/gradle/RunAntScript : org/gradle/api/DefaultTask, de/itemis/mps/gradle/tasks/MpsTask {
-	public field script Ljava/lang/Object;
 	public fun <init> ()V
 	public final fun build ()V
 	protected abstract fun getExecOperations ()Lorg/gradle/process/ExecOperations;
-	public final fun getIncludeDefaultArgs ()Z
-	public final fun getIncludeDefaultClasspath ()Z
-	public final fun getIncremental ()Z
+	public abstract fun getIncremental ()Lorg/gradle/api/provider/Property;
 	public abstract fun getJavaLauncher ()Lorg/gradle/api/provider/Property;
-	public final fun getScript ()Ljava/lang/Object;
-	public final fun getScriptArgs ()Ljava/util/List;
-	public final fun getScriptClasspath ()Lorg/gradle/api/file/FileCollection;
-	public final fun getTargets ()Ljava/util/List;
-	public final fun setIncludeDefaultArgs (Z)V
-	public final fun setIncludeDefaultClasspath (Z)V
-	public final fun setIncremental (Z)V
-	public final fun setScript (Ljava/lang/Object;)V
-	public final fun setScriptArgs (Ljava/util/List;)V
-	public final fun setScriptClasspath (Lorg/gradle/api/file/FileCollection;)V
-	public final fun setTargets (Ljava/util/List;)V
-	public final fun targets ([Ljava/lang/String;)V
+	public abstract fun getScript ()Lorg/gradle/api/provider/Property;
+	public abstract fun getScriptArgs ()Lorg/gradle/api/provider/ListProperty;
+	public abstract fun getScriptClasspath ()Lorg/gradle/api/file/ConfigurableFileCollection;
+	public abstract fun getTargets ()Lorg/gradle/api/provider/ListProperty;
 }
 
 public abstract class de/itemis/mps/gradle/TestLanguages : de/itemis/mps/gradle/RunAntScript {

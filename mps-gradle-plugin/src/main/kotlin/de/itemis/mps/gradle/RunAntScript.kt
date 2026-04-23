@@ -2,8 +2,9 @@ package de.itemis.mps.gradle;
 
 import de.itemis.mps.gradle.tasks.MpsTask
 import org.gradle.api.DefaultTask
-import org.gradle.api.file.FileCollection
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.logging.LogLevel
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.*
 import org.gradle.jvm.toolchain.JavaLauncher
@@ -13,18 +14,18 @@ import javax.inject.Inject
 
 @DisableCachingByDefault(because = "Runs an Ant script that builds MPS languages and has non-trivial, external outputs")
 abstract class RunAntScript : DefaultTask(), MpsTask {
-    @Input
-    lateinit var script: Any
-    @Input
-    var targets: List<String> = emptyList()
-    @Optional @Classpath
-    var scriptClasspath: FileCollection? = null
-    @Input
-    var scriptArgs: List<String> = emptyList()
-    @Input
-    var includeDefaultArgs = true
-    @Input
-    var includeDefaultClasspath = true
+    @get:Input
+    abstract val script: Property<String>
+
+    @get:Input
+    abstract val targets: ListProperty<String>
+
+    @get:Classpath
+    abstract val scriptClasspath: ConfigurableFileCollection
+
+    @get:Input
+    abstract val scriptArgs: ListProperty<String>
+
     @get:Inject
     protected abstract val execOperations: ExecOperations
 
@@ -38,33 +39,32 @@ abstract class RunAntScript : DefaultTask(), MpsTask {
      * Possible values:
      * * `true` - perform an incremental build. If the [targets] list includes `clean` target it will be removed, and
      *   `-Dmps.generator.skipUnmodifiedModels=true` will be passed to Ant.
-     * * `false` - The backwards compatible default. The [targets] list will not be modified and no properties will be
-     *   passed to Ant. Any outside customizations made to targets and Ant arguments are left intact so the build may
-     *   in fact be incremental.
+     * * `false` - the default. The [targets] list will not be modified and no properties will be passed to Ant. Any
+     *   outside customizations made to targets and Ant arguments are left intact so the build may in fact be
+     *   incremental.
      */
-    @Input
-    var incremental: Boolean = false
+    @get:Input
+    abstract val incremental: Property<Boolean>
 
-    fun targets(vararg targets: String) {
-        this.targets = targets.toList()
+    init {
+        incremental.convention(false)
+        scriptClasspath.convention(mpsHome.asFileTree.matching {
+            include("lib/ant/lib/*.jar")
+            include("lib/*.jar")
+        })
     }
 
     @TaskAction
     fun build() {
-        val allArgs = scriptArgs.toMutableList()
-        if (includeDefaultArgs) {
-            val defaultArgs = project.findProperty("itemis.mps.gradle.ant.defaultScriptArgs") as Collection<*>?
-            if (defaultArgs != null) {
-                allArgs += defaultArgs.map { it as String }
-            }
-        }
+        val allArgs = scriptArgs.get().toMutableList()
 
         val level = logLevel.get()
         if (level != LogLevel.LIFECYCLE && !allArgs.any { it.startsWith("-Dmps.ant.log=") }) {
             allArgs += "-Dmps.ant.log=${level.toString().lowercase()}"
         }
 
-        if (incremental) {
+        val isIncremental = incremental.get()
+        if (isIncremental) {
             allArgs += "-Dmps.generator.skipUnmodifiedModels=true"
         }
 
@@ -76,34 +76,17 @@ abstract class RunAntScript : DefaultTask(), MpsTask {
             allArgs += "-Dmps_home=$mpsHomePath"
         }
 
-        val targets = if (incremental) { targets - "clean" } else { targets }
-
-        val effectiveExecutable = javaLauncher.orNull?.executablePath?.asFile
-            ?: project.findProperty("itemis.mps.gradle.ant.defaultJavaExecutable")
-
-        val effectiveClasspath: FileCollection = scriptClasspath ?: mpsHome.asFileTree.matching {
-            include("lib/ant/lib/*.jar")
-            include("lib/*.jar")
-        }
+        val effectiveTargets = targets.get().let { if (isIncremental) it - "clean" else it }
 
         execOperations.javaexec {
-            if (effectiveExecutable != null) {
-                executable(effectiveExecutable)
-            }
+            javaLauncher.orNull?.executablePath?.asFile?.let { executable(it) }
 
             mainClass.set("org.apache.tools.ant.launch.Launcher")
             workingDir = project.rootDir
 
-            if (includeDefaultClasspath) {
-                val defaultClasspath = project.findProperty("itemis.mps.gradle.ant.defaultScriptClasspath")
-                if (defaultClasspath != null) {
-                    classpath(defaultClasspath)
-                }
-            }
+            classpath(scriptClasspath)
 
-            classpath(effectiveClasspath)
-
-            args(allArgs + "-buildfile" + project.file(script).toString() + targets)
+            args(allArgs + "-buildfile" + project.file(script.get()).toString() + effectiveTargets)
         }
     }
 }
@@ -111,13 +94,13 @@ abstract class RunAntScript : DefaultTask(), MpsTask {
 @DisableCachingByDefault(because = "Runs an Ant script that builds MPS languages and has non-trivial, external outputs")
 abstract class BuildLanguages : RunAntScript() {
     init {
-        targets = listOf("clean", "generate", "assemble")
+        targets.convention(listOf("clean", "generate", "assemble"))
     }
 }
 
 @DisableCachingByDefault(because = "Runs an Ant script that tests MPS languages and has non-trivial, external outputs")
 abstract class TestLanguages : RunAntScript() {
     init {
-        targets = listOf("clean", "generate", "assemble", "check")
+        targets.convention(listOf("clean", "generate", "assemble", "check"))
     }
 }

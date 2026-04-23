@@ -34,8 +34,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `MpsMigrate`: `javaExecutable` removed in favor of `javaLauncher` from `MpsTask`.
 - `RunAntScript`: now requires `mpsHome`. Derives the Ant classpath from `mpsHome` when `scriptClasspath` is not set,
   and passes `mps.home` and `mps_home` as Ant properties.
+- `RunAntScript`: `scriptClasspath`, `scriptArgs`, `targets`, `incremental`, and `script` are now lazy Gradle
+  properties (`ConfigurableFileCollection`, `ListProperty<String>`, `Property<Boolean>`, `Property<String>`). Use
+  `set`/`from`/`addAll` rather than direct assignment.
 - `RunAntScript`: uses the inherited `javaLauncher` and `logLevel` properties. The `executable` property has been
   removed (use `javaLauncher` instead); `-Dmps.ant.log` is derived from `logLevel` rather than from `task.logging.level`.
+- `RunAntScript`: removed the `includeDefaultArgs`, `includeDefaultClasspath`, `itemis.mps.gradle.ant.defaultScriptArgs`,
+  `itemis.mps.gradle.ant.defaultScriptClasspath`, and `itemis.mps.gradle.ant.defaultJavaExecutable` escape hatches.
+  Use `tasks.withType<RunAntScript>().configureEach { ... }` to share configuration across tasks.
 - The `de.itemis.mps.gradle.common` plugin sets the convention for `MpsTask.logLevel` to Gradle's
   `gradle.startParameter.logLevel`, so MPS subprocesses log at the same level as Gradle by default.
 
