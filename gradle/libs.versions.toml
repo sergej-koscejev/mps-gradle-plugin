@@ -6,7 +6,7 @@ kotlinCompatibilityValidator = "0.18.1"
 semver = "1.1.2"
 junit = "4.13.2"
 gitBasedVersioning = "*"
-launcher = "2.8.0.+"
+launcher = "2.8.1.+"
 
 [plugins]
 kotlin-compatibility-validator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "kotlinCompatibilityValidator" }
