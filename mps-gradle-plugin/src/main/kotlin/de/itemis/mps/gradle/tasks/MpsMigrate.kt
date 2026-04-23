@@ -94,7 +94,6 @@ abstract class MpsMigrate : DefaultTask(), MpsProjectTask {
     protected abstract val providerFactory: ProviderFactory
 
     init {
-        logLevel.convention(project.gradle.startParameter.logLevel)
         mpsVersion.convention(MpsVersionDetection.fromMpsHome(project.layout, providerFactory, mpsHome.asFile))
         group = TaskGroups.MIGRATION
     }

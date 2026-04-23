@@ -69,7 +69,6 @@ abstract class MpsCheck : JavaExec(), VerificationTask, MpsProjectTask {
     abstract val additionalModelcheckBackendClasspath: ConfigurableFileCollection
 
     init {
-        logLevel.convention(project.gradle.startParameter.logLevel)
         mpsVersion.convention(MpsVersionDetection.fromMpsHome(project.layout, providerFactory, mpsHome.asFile))
         projectLocation.convention(project.layout.projectDirectory)
         warningAsError.convention(false)

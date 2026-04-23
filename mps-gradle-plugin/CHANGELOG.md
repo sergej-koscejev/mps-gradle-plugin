@@ -32,8 +32,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `MpsCheck`, `MpsExecute`: `macros`/`varMacros` replaced with `folderMacros: MapProperty<String, Directory>`.
 - `MpsMigrate`, `Remigrate`: `projectDirectories` renamed to `projectLocations`.
 - `MpsMigrate`: `javaExecutable` removed in favor of `javaLauncher` from `MpsTask`.
-- `RunAntScript`: derives Ant classpath from `mpsHome` when `scriptClasspath` is not set. Passes `mps.home` and
-  `mps_home` as Ant properties.
+- `RunAntScript`: now requires `mpsHome`. Derives the Ant classpath from `mpsHome` when `scriptClasspath` is not set,
+  and passes `mps.home` and `mps_home` as Ant properties.
+- `RunAntScript`: uses the inherited `javaLauncher` and `logLevel` properties. The `executable` property has been
+  removed (use `javaLauncher` instead); `-Dmps.ant.log` is derived from `logLevel` rather than from `task.logging.level`.
+- The `de.itemis.mps.gradle.common` plugin sets the convention for `MpsTask.logLevel` to Gradle's
+  `gradle.startParameter.logLevel`, so MPS subprocesses log at the same level as Gradle by default.
 
 ## 1.30.1
 

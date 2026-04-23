@@ -12,15 +12,14 @@ Parameters:
 
 - `script`: path to the ANT to execute.
 - `scriptClasspath`: classpath used for the JVM that will execute the generated ANT script. Needs to contain ANT to be
-  able to run the build script. If not set and `mpsHome` is set, the classpath is derived from the MPS installation.
-  See below section "Providing Global Defaults" for project wide defaults.
+  able to run the build script. If not set, the classpath is derived from `mpsHome`. See below section
+  "Providing Global Defaults" for project wide defaults.
 - `scriptArgs`: additional command line arguments provided to the JVM that will execute the generated ANT scripts. This
   is often used to provide property valued via `-Dprop=value`. See below section "Providing Global Defaults" for project wide defaults.
-- `mpsHome`: the MPS installation directory. When set, `mps.home` and `mps_home` are passed as Ant properties
+- `mpsHome`: the MPS installation directory. Required. `mps.home` and `mps_home` are passed as Ant properties
   automatically, and the Ant classpath is derived from the MPS installation if `scriptClasspath` is not set.
-- `javaLauncher`: the Java launcher to use for running MPS. Takes precedence over `executable` and the global default.
-- `executable`: the `java` executable to use. Optional. If `itemis.mps.gradle.ant.defaultJavaExecutable` extended
-  property is set, its value is used as the default value for the parameter.
+- `javaLauncher`: the Java launcher used to run the Ant script. Optional; if not set, the
+  `itemis.mps.gradle.ant.defaultJavaExecutable` extended property is used as a fallback.
 - `includeDefaultArgs`: controls whether the project-wide default values for arguments are used.
   It's set to `true` by default.
 - `includeDefaultClasspath`: controls whether the project-wide default values for the classpath are used.
@@ -53,7 +52,7 @@ ext["itemis.mps.gradle.ant.defaultScriptClasspath"] = buildScriptClasspath
 ### Providing Global Defaults For The Java Executable
 
 The `itemis.mps.gradle.ant.defaultJavaExecutable` property specifies the value to use as the underlying
-`JavaExec.executable`. The `executable` parameter of each individual task takes precedence over the global default.
+`JavaExec.executable`. The `javaLauncher` of each individual task takes precedence over the global default.
 
 ### Incremental Builds
 

@@ -1,9 +1,15 @@
 package de.itemis.mps.gradle
 
+import de.itemis.mps.gradle.tasks.MpsTask
+
 /**
  * A side effect of this plugin is that it lets us use `plugins` block rather than `buildscript` to put the task classes
  * ([RunAntScript], [BuildLanguages], etc.) onto the classpath.
  */
+
+tasks.withType<MpsTask>().configureEach {
+    logLevel.convention(gradle.startParameter.logLevel)
+}
 
 val modelcheckBackend = configurations.create(BackendConfigurations.MODELCHECK_BACKEND_CONFIGURATION_NAME)
 val generateBackend = configurations.create(BackendConfigurations.GENERATE_BACKEND_CONFIGURATION_NAME)

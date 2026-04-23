@@ -55,7 +55,6 @@ abstract class MpsExecute : JavaExec(), MpsProjectTask {
     abstract val additionalExecuteBackendClasspath: ConfigurableFileCollection
 
     init {
-        logLevel.convention(project.gradle.startParameter.logLevel)
         mpsVersion.convention(MpsVersionDetection.fromMpsHome(project.layout, providerFactory, mpsHome.asFile))
         projectLocation.convention(project.layout.projectDirectory)
 

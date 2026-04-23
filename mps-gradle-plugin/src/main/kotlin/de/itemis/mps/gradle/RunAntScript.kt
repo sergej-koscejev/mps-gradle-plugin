@@ -2,7 +2,6 @@ package de.itemis.mps.gradle;
 
 import de.itemis.mps.gradle.tasks.MpsTask
 import org.gradle.api.DefaultTask
-import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
 import org.gradle.api.logging.LogLevel
 import org.gradle.api.provider.Property
@@ -26,13 +25,8 @@ abstract class RunAntScript : DefaultTask(), MpsTask {
     var includeDefaultArgs = true
     @Input
     var includeDefaultClasspath = true
-    @Optional @Input
-    var executable: Any? = null
     @get:Inject
     protected abstract val execOperations: ExecOperations
-
-    @Internal
-    abstract override fun getMpsHome(): DirectoryProperty
 
     @Nested
     @Optional
@@ -55,10 +49,6 @@ abstract class RunAntScript : DefaultTask(), MpsTask {
         this.targets = targets.toList()
     }
 
-    fun executable(executable: Any?) {
-        this.executable = executable
-    }
-
     @TaskAction
     fun build() {
         val allArgs = scriptArgs.toMutableList()
@@ -69,37 +59,31 @@ abstract class RunAntScript : DefaultTask(), MpsTask {
             }
         }
 
-        if (logging.level != null && logging.level != LogLevel.LIFECYCLE && !allArgs.any { it.startsWith("-Dmps.ant.log=") }) {
-            allArgs += "-Dmps.ant.log=${logging.level.toString().lowercase()}"
+        val level = logLevel.get()
+        if (level != LogLevel.LIFECYCLE && !allArgs.any { it.startsWith("-Dmps.ant.log=") }) {
+            allArgs += "-Dmps.ant.log=${level.toString().lowercase()}"
         }
 
         if (incremental) {
             allArgs += "-Dmps.generator.skipUnmodifiedModels=true"
         }
 
-        if (mpsHome.isPresent) {
-            val mpsHomePath = mpsHome.get().asFile.absolutePath
-            if (!allArgs.any { it.startsWith("-Dmps.home=") }) {
-                allArgs += "-Dmps.home=$mpsHomePath"
-            }
-            if (!allArgs.any { it.startsWith("-Dmps_home=") }) {
-                allArgs += "-Dmps_home=$mpsHomePath"
-            }
+        val mpsHomePath = mpsHome.get().asFile.absolutePath
+        if (!allArgs.any { it.startsWith("-Dmps.home=") }) {
+            allArgs += "-Dmps.home=$mpsHomePath"
+        }
+        if (!allArgs.any { it.startsWith("-Dmps_home=") }) {
+            allArgs += "-Dmps_home=$mpsHomePath"
         }
 
         val targets = if (incremental) { targets - "clean" } else { targets }
 
-        val effectiveExecutable = executable
-            ?: javaLauncher.orNull?.executablePath?.asFile
+        val effectiveExecutable = javaLauncher.orNull?.executablePath?.asFile
             ?: project.findProperty("itemis.mps.gradle.ant.defaultJavaExecutable")
 
-        val effectiveClasspath: FileCollection? = scriptClasspath ?: if (mpsHome.isPresent) {
-            mpsHome.asFileTree.matching {
-                include("lib/ant/lib/*.jar")
-                include("lib/*.jar")
-            }
-        } else {
-            null
+        val effectiveClasspath: FileCollection = scriptClasspath ?: mpsHome.asFileTree.matching {
+            include("lib/ant/lib/*.jar")
+            include("lib/*.jar")
         }
 
         execOperations.javaexec {
@@ -117,9 +101,7 @@ abstract class RunAntScript : DefaultTask(), MpsTask {
                 }
             }
 
-            if (effectiveClasspath != null) {
-                classpath(effectiveClasspath)
-            }
+            classpath(effectiveClasspath)
 
             args(allArgs + "-buildfile" + project.file(script).toString() + targets)
         }

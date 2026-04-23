@@ -63,7 +63,6 @@ abstract class Remigrate : JavaExec(), MpsProjectTask {
     }
 
     init {
-        logLevel.convention(project.gradle.startParameter.logLevel)
         mpsVersion.convention(MpsVersionDetection.fromMpsHome(project.layout, providerFactory, mpsHome.asFile))
         additionalClasspath.from(mpsHome.asFileTree.matching { include("lib/**/*.jar") })
 
