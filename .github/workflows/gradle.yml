@@ -24,7 +24,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       # Set up Java to run Gradle. Gradle will then download the appropriate version(s) to compile the projects or run
       # tests.
