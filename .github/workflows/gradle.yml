@@ -28,7 +28,7 @@ jobs:
 
       # Set up Java to run Gradle. Gradle will then download the appropriate version(s) to compile the projects or run
       # tests.
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 17
