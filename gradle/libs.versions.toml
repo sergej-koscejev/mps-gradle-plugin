@@ -1,6 +1,6 @@
 [versions]
 # plugins
-kotlinCompatibilityValidator = "0.18.1"
+kotlinCompatibilityValidator = "0.18.2"
 
 # libraries
 semver = "1.1.2"
