@@ -4,7 +4,7 @@ package support
  * MPS version used by integration tests that spin up an MPS instance (model check, generate, execute, migrate, ...).
  * Kept in a single place so Renovate can bump it.
  */
-const val MPS_VERSION = "2025.1.2"
+const val MPS_VERSION = "2025.3-EAP1"
 
 /**
  * The Java version to be used for [MPS_VERSION]. Updated manually.
