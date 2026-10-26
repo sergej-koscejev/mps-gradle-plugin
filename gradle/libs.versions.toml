@@ -3,7 +3,7 @@
 kotlinCompatibilityValidator = "0.18.1"
 
 # libraries
-semver = "1.1.2"
+semver = "2.1.0"
 junit = "4.13.2"
 gitBasedVersioning = "*"
 launcher = "2.8.0.+"
